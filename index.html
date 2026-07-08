@@ -1046,9 +1046,9 @@
       '<header class="site-header"><div class="container">' +
       '<div class="brand">PolifarmaRisk <small>· Algoritmo clínico</small></div>' +
       '<nav class="tabs">' +
-      '<button class="' + (state.view === "home" ? "active" : "") + '" onclick="PolyRisk.setView(\'home\')">Inicio</button>' +
-      '<button class="' + (state.view === "form" ? "active" : "") + '" onclick="PolyRisk.startBlank()">Nuevo análisis</button>' +
-      '<button class="' + (state.view === "results" ? "active" : "") + '" ' + (state.analysis ? "" : "disabled") + ' onclick="PolyRisk.setView(\'results\')">Resultados</button>' +
+      '<button class="' + (state.view === "home" ? "active" : "") + '" onclick="PolifarmaRisk.setView(\'home\')">Inicio</button>' +
+      '<button class="' + (state.view === "form" ? "active" : "") + '" onclick="PolifarmaRisk.startBlank()">Nuevo análisis</button>' +
+      '<button class="' + (state.view === "results" ? "active" : "") + '" ' + (state.analysis ? "" : "disabled") + ' onclick="PolifarmaRisk.setView(\'results\')">Resultados</button>' +
       "</nav></div></header>";
   }
 
@@ -1056,7 +1056,7 @@
     var cumNote = (typeof CUM_CATALOG !== "undefined")
       ? '<p style="margin-top:8px;">Catálogo de medicamentos, buscable por marca o principio activo (' + CUM_CATALOG.length + ' registros), extraído del <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">Código Único de Medicamentos (CUM) — INVIMA, datos.gov.co</a>.</p>'
       : "";
-    return '<footer class="site-footer"><div class="container"><p>PolifarmaRisk · Herramienta de apoyo a la decisión clínica para polifarmacia en pacientes pluripatológicos. Contenido con fines educativos y de demostración para congreso de investigación — no sustituye el criterio clínico ni bases de datos regulatorias (DrugBank, Micromedex, STOPP/START). <a href="#" onclick="PolyRisk.goToReferences(); return false;">Ver referencias y evidencia</a>.</p>' + cumNote + "</div></footer>";
+    return '<footer class="site-footer"><div class="container"><p>PolifarmaRisk · Herramienta de apoyo a la decisión clínica para polifarmacia en pacientes pluripatológicos. Contenido con fines educativos y de demostración para congreso de investigación — no sustituye el criterio clínico ni bases de datos regulatorias (DrugBank, Micromedex, STOPP/START). <a href="#" onclick="PolifarmaRisk.goToReferences(); return false;">Ver referencias y evidencia</a>.</p>' + cumNote + "</div></footer>";
   }
 
   function renderHome() {
@@ -1071,7 +1071,7 @@
         '<div><p class="persona-name">' + p.name + '</p><p class="persona-meta">' + p.summary + "</p></div></div>" +
         '<div class="persona-tags">' + tags + "</div>" +
         '<div class="persona-foot"><span>' + p.meds.length + " medicamentos</span>" +
-        '<button class="btn btn-ghost btn-sm" onclick="PolyRisk.loadPersona(\'' + p.id + '\')">Cargar arquetipo ' + icon("arrow", 14) + "</button></div>" +
+        '<button class="btn btn-ghost btn-sm" onclick="PolifarmaRisk.loadPersona(\'' + p.id + '\')">Cargar arquetipo ' + icon("arrow", 14) + "</button></div>" +
         "</article>";
     }).join("");
 
@@ -1093,7 +1093,7 @@
       '<h1 class="display">Análisis de riesgo de polifarmacia para pacientes pluripatológicos</h1>' +
       '<p class="lede">Carga un arquetipo persona (hipertensión, diabetes, obesidad, dislipidemia, EPOC y otras comorbilidades) o registra un paciente propio, y obtén una clasificación de riesgo de interacciones, adherencia y confusión de medicamentos.</p>' +
       '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
-      '<button class="btn btn-primary" onclick="PolyRisk.startBlank()">' + icon("pill", 16) + " Nuevo análisis</button>" +
+      '<button class="btn btn-primary" onclick="PolifarmaRisk.startBlank()">' + icon("pill", 16) + " Nuevo análisis</button>" +
       '<button class="btn btn-ghost" onclick="document.getElementById(\'personas\').scrollIntoView({behavior:\'smooth\'})">Ver arquetipos</button>' +
       "</div></section>" +
       '<section class="container" id="personas">' +
@@ -1126,7 +1126,7 @@
     var conditionRows = CONDITIONS.map(function (c) {
       var checked = state.formConditions.indexOf(c.id) !== -1;
       return '<label class="check-row ' + (checked ? "checked" : "") + '">' +
-        '<input type="checkbox" ' + (checked ? "checked" : "") + ' onchange="PolyRisk.toggleCondition(\'' + c.id + '\')"/>' +
+        '<input type="checkbox" ' + (checked ? "checked" : "") + ' onchange="PolifarmaRisk.toggleCondition(\'' + c.id + '\')"/>' +
         "<span>" + withAbbr(c.label) + "</span></label>";
     }).join("");
 
@@ -1150,7 +1150,7 @@
     var medRows = state.draftMeds.map(function (m, idx) {
       return '<div class="med-row"><div><div class="med-name">' + escapeHtml(m.name) + '</div>' +
         '<div class="med-detail">' + escapeHtml(m.dosage || "—") + " · " + (FREQUENCIES.filter(function (f) { return f.v === m.freq; })[0] || {}).label + " · " + ROUTES[m.route] + (m.indication ? " · " + escapeHtml(m.indication) : "") + "</div></div>" +
-        '<button class="btn btn-danger-ghost btn-sm" onclick="PolyRisk.removeDraftMed(' + idx + ')">' + icon("trash", 14) + "</button></div>";
+        '<button class="btn btn-danger-ghost btn-sm" onclick="PolifarmaRisk.removeDraftMed(' + idx + ')">' + icon("trash", 14) + "</button></div>";
     }).join("") || '<p style="color:var(--text-muted);font-size:0.85rem;">Aún no has agregado medicamentos.</p>';
 
     return '' +
@@ -1199,13 +1199,13 @@
       '<div class="form-grid" style="margin-top:12px;">' +
       '<div class="field"><label>Indicación</label><input id="m-indication" placeholder="Ej. HTA" value="' + escapeHtml(state.medDraft.indication) + '"/></div>' +
       "</div>" +
-      '<div style="margin-top:14px;"><button class="btn btn-primary btn-sm" onclick="PolyRisk.addDraftMed()">' + icon("plus", 14) + " Agregar medicamento</button></div>" +
+      '<div style="margin-top:14px;"><button class="btn btn-primary btn-sm" onclick="PolifarmaRisk.addDraftMed()">' + icon("plus", 14) + " Agregar medicamento</button></div>" +
       renderCumBox() +
       "</div></div>" +
 
       '<div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px;">' +
-      '<button class="btn btn-ghost" onclick="PolyRisk.setView(\'home\')">Cancelar</button>' +
-      '<button class="btn btn-primary" onclick="PolyRisk.runAnalysis()">Analizar riesgos ' + icon("arrow", 16) + "</button>" +
+      '<button class="btn btn-ghost" onclick="PolifarmaRisk.setView(\'home\')">Cancelar</button>' +
+      '<button class="btn btn-primary" onclick="PolifarmaRisk.runAnalysis()">Analizar riesgos ' + icon("arrow", 16) + "</button>" +
       "</div>" +
       "</section>";
   }
@@ -1263,7 +1263,7 @@
           var checked = isMedInDraft(m.name);
           var freqLabel = (FREQUENCIES.filter(function (f) { return f.v === m.freq; })[0] || {}).label || "";
           return '<label class="quick-row ' + (checked ? "checked" : "") + '">' +
-            '<input type="checkbox" ' + (checked ? "checked" : "") + ' onchange="PolyRisk.toggleQuickMed(\'' + condId + "', '" + m.name.replace(/'/g, "\\'") + '\')"/>' +
+            '<input type="checkbox" ' + (checked ? "checked" : "") + ' onchange="PolifarmaRisk.toggleQuickMed(\'' + condId + "', '" + m.name.replace(/'/g, "\\'") + '\')"/>' +
             "<span>" + escapeHtml(m.name) + '</span><span class="quick-dose">' + escapeHtml(m.dosage) + (freqLabel ? " · " + freqLabel : "") + "</span>" +
             "</label>";
         }).join("");
@@ -1280,7 +1280,7 @@
     var resultsHtml = state.cumResults.map(function (r, idx) {
       return '<div class="cum-item"><div><div class="cum-item-name">' + escapeHtml(r.n) + (r.p ? ' <span class="cum-item-brand">(' + escapeHtml(r.p) + ')</span>' : '') + '</div>' +
         '<div class="cum-item-meta">' + escapeHtml(r.atc || "—") + " · " + escapeHtml(r.d || "") + " · " + escapeHtml(r.r || "") + "</div></div>" +
-        '<button type="button" class="btn btn-ghost btn-sm" onclick="PolyRisk.useCumEntry(' + idx + ')">Usar</button></div>';
+        '<button type="button" class="btn btn-ghost btn-sm" onclick="PolifarmaRisk.useCumEntry(' + idx + ')">Usar</button></div>';
     }).join("");
     var countLabel = query.trim().length < 2
       ? '<p class="cum-count">Escribe al menos 2 caracteres para buscar.</p>'
@@ -1289,7 +1289,7 @@
       '<div class="cum-box">' +
       '<p class="subtle-title">Buscar en el catálogo oficial (CUM)</p>' +
       '<p class="cum-source">Registros vigentes del INVIMA, vía <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">datos.gov.co — Código Único de Medicamentos</a>. Se agrega el medicamento por su principio activo (el nombre comercial se muestra entre paréntesis solo como referencia); si es un producto de combinación, revisa si aparece en más de un registro y agrégalos por separado.</p>' +
-      '<div class="field"><input id="cum-search" placeholder="Ej. losartán, Cozaar, metformina…" value="' + escapeHtml(query) + '" oninput="PolyRisk.setCumQuery(this.value)"/></div>' +
+      '<div class="field"><input id="cum-search" placeholder="Ej. losartán, Cozaar, metformina…" value="' + escapeHtml(query) + '" oninput="PolifarmaRisk.setCumQuery(this.value)"/></div>' +
       countLabel +
       '<div class="cum-results">' + resultsHtml + "</div>" +
       "</div>";
@@ -1312,7 +1312,7 @@
       '<div class="value" style="color:var(--risk-' + a.overallLevel + ')">' + levelLabel(a.overallLevel) + " · " + a.overallScore + "/100</div>" +
       (a.overallOverride ? '<p style="margin:6px 0 0;font-size:0.82rem;color:var(--text-muted);">Elevado automáticamente por regla de anulación: existe al menos una interacción grave.</p>' : "") +
       "</div>" +
-      '<button class="btn btn-ghost" onclick="PolyRisk.exportReport()">Exportar / imprimir reporte</button>' +
+      '<button class="btn btn-ghost" onclick="PolifarmaRisk.exportReport()">Exportar / imprimir reporte</button>' +
       "</div>";
 
     var tabs = [
@@ -1321,7 +1321,7 @@
       { id: "adherence", label: "Adherencia" },
       { id: "recs", label: "Recomendaciones" }
     ].map(function (t) {
-      return '<button class="' + (state.detailTab === t.id ? "active" : "") + '" onclick="PolyRisk.setDetailTab(\'' + t.id + '\')">' + t.label + "</button>";
+      return '<button class="' + (state.detailTab === t.id ? "active" : "") + '" onclick="PolifarmaRisk.setDetailTab(\'' + t.id + '\')">' + t.label + "</button>";
     }).join("");
 
     var interactionsBody = a.interactions.length ? a.interactions.map(function (x) {
@@ -1388,8 +1388,8 @@
       '<div><h2 class="section-title" style="margin-bottom:2px;">Resultados — ' + escapeHtml(p.name || "Paciente") + "</h2>" +
       '<p class="section-sub" style="margin:0;">' + (p.age ? p.age + " años · " : "") + p.conditions.length + " condiciones crónicas · " + a.meds.length + " medicamentos</p></div>" +
       '<div style="display:flex;gap:8px;">' +
-      '<button class="btn btn-ghost btn-sm" onclick="PolyRisk.goToReferences()">Metodología y referencias</button>' +
-      '<button class="btn btn-ghost btn-sm" onclick="PolyRisk.startBlank()">Nuevo análisis</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="PolifarmaRisk.goToReferences()">Metodología y referencias</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="PolifarmaRisk.startBlank()">Nuevo análisis</button>' +
       "</div>" +
       "</div>" +
       summary + overall +
@@ -1542,7 +1542,7 @@
     toast("Datos cargados desde el catálogo CUM");
   }
 
-  window.PolyRisk = {
+  window.PolifarmaRisk = {
     setView: setView, loadPersona: loadPersona, startBlank: startBlank,
     toggleCondition: toggleCondition, toggleQuickMed: toggleQuickMed, addDraftMed: addDraftMed, removeDraftMed: removeDraftMed,
     runAnalysis: runAnalysis, setDetailTab: setDetailTab, setCumQuery: setCumQuery, useCumEntry: useCumEntry,
