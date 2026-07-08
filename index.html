@@ -155,6 +155,7 @@
   .cum-results { display:flex; flex-direction:column; gap: 6px; max-height: 260px; overflow-y: auto; margin-top: 10px; }
   .cum-item { display:flex; align-items:center; justify-content:space-between; gap: 12px; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
   .cum-item-name { font-size: 0.86rem; font-weight: 600; }
+  .cum-item-brand { font-weight: 400; color: var(--text-muted); }
   .cum-item-meta { font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono); }
   .cum-count { font-size: 0.76rem; color: var(--text-muted); margin-top: 8px; }
 
@@ -379,6 +380,45 @@
       { name: "Ciprofloxacino", cls: "Antibiotico", dosage: "500 mg", freq: "2x" }
     ]
   };
+
+  // Diccionario principio activo -> clase farmacológica, construido a partir de MED_CATALOG.
+  // Permite clasificar medicamentos de combinación (ej. "Sacubitrilo/Valsartán") y medicamentos
+  // cargados desde el buscador CUM, descomponiendo el nombre por separadores de combinación
+  // ("/" o "+") y buscando cada principio activo por separado. Nota metodológica: el riesgo de
+  // interacción se evalúa por identidad del principio activo, no por su concentración en mg —
+  // por eso la clasificación ignora dosis y solo compara nombres de sustancia normalizados.
+  // Se construye de forma diferida (no al cargar el script) porque depende de normalize(),
+  // definida más abajo en el archivo junto con el resto de utilidades.
+  var SUBSTANCE_CLASS = null;
+  function buildSubstanceClassMap() {
+    var map = {};
+    for (var group in MED_CATALOG) {
+      MED_CATALOG[group].forEach(function (m) {
+        m.name.split(/[\/+]/).forEach(function (tok) {
+          var key = normalize(tok);
+          if (key && !map[key]) map[key] = m.cls;
+        });
+      });
+    }
+    return map;
+  }
+
+  // Clasifica un medicamento por nombre en una o más clases farmacológicas. Para productos de
+  // combinación (p. ej. "Losartán/Hidroclorotiazida" o un producto CUM con "+"), descompone el
+  // nombre y evalúa el riesgo de interacción de cada principio activo componente por separado,
+  // en vez de tratar la combinación como una entidad opaca sin clasificar.
+  function classifyMedName(name) {
+    if (!SUBSTANCE_CLASS) SUBSTANCE_CLASS = buildSubstanceClassMap();
+    var classes = [];
+    var whole = findCatalogEntry(name);
+    if (whole && whole.cls && classes.indexOf(whole.cls) === -1) classes.push(whole.cls);
+    (name || "").split(/[\/+]/).forEach(function (tok) {
+      var key = normalize(tok);
+      var cls = SUBSTANCE_CLASS[key];
+      if (cls && classes.indexOf(cls) === -1) classes.push(cls);
+    });
+    return classes;
+  }
 
   var CLASS_LABELS = {
     IECA: "IECA", ARAII: "ARA II", BB_Cardio: "Beta-bloqueante cardioselectivo",
@@ -631,7 +671,7 @@
     REFERENCES.push({
       domain: "Catálogo de medicamentos",
       items: [
-        { t: "Código Único de Medicamentos (CUM) — Registros vigentes", a: "INVIMA, vía datos.gov.co — Datos Abiertos Colombia. Extraído 2026-07-07; filtrado a registros \"Vigente\"/\"Activo\"; " + CUM_CATALOG.length + " principios activos únicos deduplicados. Fuente del buscador integrado en el formulario de medicamentos.", u: "https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" }
+        { t: "Código Único de Medicamentos (CUM) — Registros vigentes", a: "INVIMA, vía datos.gov.co — Datos Abiertos Colombia. Reconstruido 2026-07-08; filtrado a registros \"Vigente\"/\"Activo\"; " + CUM_CATALOG.length + " pares únicos de nombre comercial + principio activo (permite buscar tanto por marca como por principio activo). El principio activo se simplificó removiendo concentración en mg y forma de sal — ver nota metodológica en Confusión de medicamentos.", u: "https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" }
       ]
     });
   }
@@ -760,18 +800,21 @@
 
   function analyzePatient(patient) {
     var meds = patient.meds.map(function (m) {
-      var entry = findCatalogEntry(m.name);
       return {
         name: m.name, dosage: m.dosage, freq: m.freq, route: m.route, indication: m.indication,
-        cls: entry ? entry.cls : null
+        classes: classifyMedName(m.name)
       };
     });
 
     var interactions = [];
     var seenPairs = {};
 
+    // La clave incluye el mecanismo de la regla, no solo el par de medicamentos: un medicamento
+    // de combinación puede coincidir con más de una CLASS_PAIR_RULES distinta para el mismo par
+    // (p. ej. un combo IECA+diurético frente a un AINE dispara tanto la regla de perfusión renal
+    // del diurético como la de prostaglandinas del IECA), y ambas deben mostrarse, no solo la primera.
     function addInteraction(m1, m2, rule) {
-      var key = normalize(m1.name) + "|" + normalize(m2.name);
+      var key = normalize(m1.name) + "|" + normalize(m2.name) + "|" + rule.mechanism;
       if (seenPairs[key]) return;
       seenPairs[key] = true;
       interactions.push({
@@ -792,25 +835,32 @@
           if ((n1 === ra && n2 === rb) || (n1 === rb && n2 === ra)) addInteraction(m1, m2, nr);
         }
 
-        if (m1.cls && m2.cls) {
-          for (var c = 0; c < CLASS_PAIR_RULES.length; c++) {
-            var cr = CLASS_PAIR_RULES[c];
-            var m1InA = cr.a.indexOf(m1.cls) !== -1, m2InB = cr.b.indexOf(m2.cls) !== -1;
-            var m1InB = cr.b.indexOf(m1.cls) !== -1, m2InA = cr.a.indexOf(m2.cls) !== -1;
-            if ((m1InA && m2InB) || (m1InB && m2InA)) addInteraction(m1, m2, cr);
-          }
+        // Cada clase de m1 se compara contra cada clase de m2: esto detecta el riesgo de
+        // interacción de cada principio activo de una combinación (ej. Sacubitrilo/Valsartán
+        // aporta las clases ARNI y ARA II), no solo de la combinación como entidad opaca.
+        for (var c = 0; c < CLASS_PAIR_RULES.length; c++) {
+          var cr = CLASS_PAIR_RULES[c];
+          var m1InA = m1.classes.some(function (cl) { return cr.a.indexOf(cl) !== -1; });
+          var m2InB = m2.classes.some(function (cl) { return cr.b.indexOf(cl) !== -1; });
+          var m1InB = m1.classes.some(function (cl) { return cr.b.indexOf(cl) !== -1; });
+          var m2InA = m2.classes.some(function (cl) { return cr.a.indexOf(cl) !== -1; });
+          if ((m1InA && m2InB) || (m1InB && m2InA)) addInteraction(m1, m2, cr);
         }
       }
     }
 
     // Regla especial: "triple whammy" renal (IECA/ARA II + Diurético + AINE)
-    var hasRAAS = meds.some(function (m) { return m.cls === "IECA" || m.cls === "ARAII"; });
-    var diureticMed = meds.filter(function (m) { return m.cls === "Diuretico_Tiazidico" || m.cls === "Diuretico_Asa"; })[0];
-    var aineMed = meds.filter(function (m) { return m.cls === "AINE"; })[0];
-    var raasMed = meds.filter(function (m) { return m.cls === "IECA" || m.cls === "ARAII"; })[0];
+    function hasClass(m, cls) { return m.classes.indexOf(cls) !== -1; }
+    var hasRAAS = meds.some(function (m) { return hasClass(m, "IECA") || hasClass(m, "ARAII"); });
+    var diureticMed = meds.filter(function (m) { return hasClass(m, "Diuretico_Tiazidico") || hasClass(m, "Diuretico_Asa"); })[0];
+    var aineMed = meds.filter(function (m) { return hasClass(m, "AINE"); })[0];
+    var raasMed = meds.filter(function (m) { return hasClass(m, "IECA") || hasClass(m, "ARAII"); })[0];
     if (hasRAAS && diureticMed && aineMed) {
+      // Si el mismo medicamento de combinación aporta tanto el IECA/ARA II como el diurético
+      // (p. ej. "Enalapril/Hidroclorotiazida"), se muestra una sola vez en vez de duplicado.
+      var raasLabel = (raasMed === diureticMed) ? raasMed.name : raasMed.name + " + " + diureticMed.name;
       interactions.push({
-        med1: raasMed.name + " + " + diureticMed.name, med2: aineMed.name, severity: "grave",
+        med1: raasLabel, med2: aineMed.name, severity: "grave",
         mechanism: '"Triple whammy": hipoperfusión renal por bloqueo simultáneo del eje RAAS, depleción de volumen y prostaglandinas',
         description: "La combinación de un IECA/ARA II, un diurético y un AINE incrementa marcadamente el riesgo de lesión renal aguda.",
         recommendation: "Evitar la triple combinación, en especial en pacientes con ERC, deshidratación o edad avanzada.",
@@ -1003,7 +1053,7 @@
 
   function footer() {
     var cumNote = (typeof CUM_CATALOG !== "undefined")
-      ? '<p style="margin-top:8px;">Catálogo de principios activos (' + CUM_CATALOG.length + ') extraído del <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">Código Único de Medicamentos (CUM) — INVIMA, datos.gov.co</a>.</p>'
+      ? '<p style="margin-top:8px;">Catálogo de medicamentos, buscable por marca o principio activo (' + CUM_CATALOG.length + ' registros), extraído del <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">Código Único de Medicamentos (CUM) — INVIMA, datos.gov.co</a>.</p>'
       : "";
     return '<footer class="site-footer"><div class="container"><p>PolyRisk · Herramienta de apoyo a la decisión clínica para polifarmacia en pacientes pluripatológicos. Contenido con fines educativos y de demostración para congreso de investigación — no sustituye el criterio clínico ni bases de datos regulatorias (DrugBank, Micromedex, STOPP/START). <a href="#" onclick="PolyRisk.goToReferences(); return false;">Ver referencias y evidencia</a>.</p>' + cumNote + "</div></footer>";
   }
@@ -1030,7 +1080,7 @@
       { icon: "shield", title: "Confusión LASA", body: "Detección por tabla curada (ISMP) y por algoritmo de similitud de cadenas (Levenshtein) para pares no catalogados." }
     ];
     if (typeof CUM_CATALOG !== "undefined") {
-      features.push({ icon: "pill", title: "Catálogo oficial CUM", body: CUM_CATALOG.length + " principios activos vigentes del INVIMA (datos.gov.co) disponibles para búsqueda al registrar medicamentos." });
+      features.push({ icon: "pill", title: "Catálogo oficial CUM", body: CUM_CATALOG.length + " registros vigentes del INVIMA (datos.gov.co), buscables por marca o principio activo, disponibles al registrar medicamentos." });
     }
     features = features.map(function (f) {
       return '<div class="feature-card"><div class="feature-icon">' + icon(f.icon, 20) + "</div><h3>" + f.title + "</h3><p>" + f.body + "</p></div>";
@@ -1056,6 +1106,7 @@
       '<section class="container" id="referencias">' +
       '<h2 class="section-title">Referencias y evidencia</h2>' +
       '<p class="section-sub">Distinguimos dos niveles: (1) hallazgos con <b>cita verificada</b> — el par o la interacción se comprobó línea por línea contra el texto completo del documento fuente (incluye 6 reglas de interacción verificadas contra los 133 criterios STOPP y 57 START de la versión 3, y los 2 confirmados contra Beers Criteria 2023), visible como "Fuente" en cada tarjeta de resultado; y (2) el resto del motor de reglas, que refleja <b>consenso farmacológico general</b> (mecanismos y severidades ampliamente documentados en la literatura) pero no encontró un criterio numerado exacto al revisar esos mismos documentos completos. La lista de pares LASA se verificó en su totalidad contra la lista oficial de ISMP. La fórmula de riesgo de adherencia es una puntuación heurística propia inspirada en los factores que identifican OMS y NICE; no es un instrumento validado.</p>' +
+      '<p class="section-sub"><b>Nota metodológica — combinaciones y concentración:</b> el riesgo de interacción depende de la identidad del principio activo, no de su concentración en mg. Por eso el motor ignora la dosis al clasificar un medicamento y, para productos de combinación (p. ej. "Losartán/Hidroclorotiazida" o cualquier nombre con "/" o "+"), evalúa el riesgo de <i>cada</i> principio activo componente por separado en vez de tratar la combinación como una entidad opaca sin clasificar. El catálogo CUM se reconstruyó para permitir buscar por nombre comercial además de principio activo, y sus nombres se simplificaron programáticamente (se removieron concentración y forma de sal, p. ej. "Enalapril Maleato 20 mg" → "Enalapril") para habilitar esta clasificación; esta limpieza es heurística sobre texto de INVIMA con formato inconsistente, por lo que combinaciones con redacción atípica pueden no detectarse automáticamente — siempre verificar manualmente.</p>' +
       renderReferences() +
       "</section>";
   }
@@ -1157,15 +1208,18 @@
       "</section>";
   }
 
+  // Busca tanto por principio activo (n) como por nombre comercial (p), ya que en la práctica
+  // clínica suele conocerse la marca y no el principio activo. La coincidencia por inicio de
+  // palabra se prioriza sobre la coincidencia parcial en cualquiera de los dos campos.
   function searchCum(query) {
     if (typeof CUM_CATALOG === "undefined" || !query || query.trim().length < 2) return [];
     var q = normalize(query.trim());
     var starts = [], includes = [];
     for (var i = 0; i < CUM_CATALOG.length; i++) {
       var entry = CUM_CATALOG[i];
-      var n = normalize(entry.n);
-      if (n.indexOf(q) === 0) starts.push(entry);
-      else if (n.indexOf(q) !== -1) includes.push(entry);
+      var n = normalize(entry.n), p = normalize(entry.p || "");
+      if (n.indexOf(q) === 0 || p.indexOf(q) === 0) starts.push(entry);
+      else if (n.indexOf(q) !== -1 || p.indexOf(q) !== -1) includes.push(entry);
       if (starts.length >= 25) break;
     }
     return starts.concat(includes).slice(0, 25);
@@ -1222,18 +1276,18 @@
     var query = state.cumQuery || "";
     state.cumResults = searchCum(query);
     var resultsHtml = state.cumResults.map(function (r, idx) {
-      return '<div class="cum-item"><div><div class="cum-item-name">' + escapeHtml(r.n) + '</div>' +
+      return '<div class="cum-item"><div><div class="cum-item-name">' + escapeHtml(r.n) + (r.p ? ' <span class="cum-item-brand">(' + escapeHtml(r.p) + ')</span>' : '') + '</div>' +
         '<div class="cum-item-meta">' + escapeHtml(r.atc || "—") + " · " + escapeHtml(r.d || "") + " · " + escapeHtml(r.r || "") + "</div></div>" +
         '<button type="button" class="btn btn-ghost btn-sm" onclick="PolyRisk.useCumEntry(' + idx + ')">Usar</button></div>';
     }).join("");
     var countLabel = query.trim().length < 2
       ? '<p class="cum-count">Escribe al menos 2 caracteres para buscar.</p>'
-      : '<p class="cum-count">' + state.cumResults.length + (state.cumResults.length === 25 ? "+ " : " ") + "resultado" + (state.cumResults.length === 1 ? "" : "s") + " sobre " + CUM_CATALOG.length + " principios activos vigentes.</p>";
+      : '<p class="cum-count">' + state.cumResults.length + (state.cumResults.length === 25 ? "+ " : " ") + "resultado" + (state.cumResults.length === 1 ? "" : "s") + " sobre " + CUM_CATALOG.length + " registros vigentes (marca + principio activo).</p>";
     return '' +
       '<div class="cum-box">' +
       '<p class="subtle-title">Buscar en el catálogo oficial (CUM)</p>' +
-      '<p class="cum-source">Registros vigentes del INVIMA, vía <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">datos.gov.co — Código Único de Medicamentos</a>.</p>' +
-      '<div class="field"><input id="cum-search" placeholder="Ej. losartán, metformina, ibuprofeno…" value="' + escapeHtml(query) + '" oninput="PolyRisk.setCumQuery(this.value)"/></div>' +
+      '<p class="cum-source">Registros vigentes del INVIMA, vía <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">datos.gov.co — Código Único de Medicamentos</a>. Se agrega el medicamento por su principio activo (el nombre comercial se muestra entre paréntesis solo como referencia); si es un producto de combinación, revisa si aparece en más de un registro y agrégalos por separado.</p>' +
+      '<div class="field"><input id="cum-search" placeholder="Ej. losartán, Cozaar, metformina…" value="' + escapeHtml(query) + '" oninput="PolyRisk.setCumQuery(this.value)"/></div>' +
       countLabel +
       '<div class="cum-results">' + resultsHtml + "</div>" +
       "</div>";
@@ -1318,9 +1372,12 @@
     }).join("");
 
     var medList = a.meds.map(function (m) {
+      var classLabel = (m.classes && m.classes.length)
+        ? m.classes.map(function (c) { return CLASS_LABELS[c] || c; }).join(" + ")
+        : "Sin clasificar";
       return '<div class="med-row"><div><div class="med-name">' + escapeHtml(m.name) + '</div><div class="med-detail">' +
         escapeHtml(m.dosage || "—") + " · " + escapeHtml(m.indication || "") + "</div></div>" +
-        '<span class="tag">' + withAbbr(CLASS_LABELS[m.cls] || "Sin clasificar") + "</span></div>";
+        '<span class="tag">' + withAbbr(classLabel) + "</span></div>";
     }).join("");
 
     return '' +

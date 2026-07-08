@@ -13,7 +13,8 @@ En el celular, puedes "Agregar a pantalla de inicio" desde el navegador para ins
 ## Contenido
 
 - `index.html` — la aplicación completa (motor de riesgo, UI, datos clínicos).
-- `cum-catalog.js` — catálogo de 5.956 principios activos vigentes, extraído del [Código Único de Medicamentos (CUM) — INVIMA, datos.gov.co](https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data).
+- `cum-catalog.js` — catálogo de 12.581 registros vigentes (marca + principio activo, buscable por ambos), extraído del [Código Único de Medicamentos (CUM) — INVIMA, datos.gov.co](https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data).
+- `serve.ps1` — servidor HTTP estático mínimo (PowerShell) para probar la app localmente sin depender de Node/Python; úsalo con `powershell -File app/serve.ps1` y abre `http://localhost:8843/`.
 - `manifest.json`, `icon.svg` — metadatos para instalación como app (PWA ligera).
 
 ## Fuentes clínicas
