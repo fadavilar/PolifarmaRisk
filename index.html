@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PolyRisk — Análisis de Polifarmacia</title>
+<title>PolifarmaRisk — Análisis de Polifarmacia</title>
 <meta name="description" content="Analizador de riesgos de polifarmacia (interacciones, adherencia, LASA) para pacientes crónicos pluripatológicos." />
 <meta name="theme-color" content="#0F6E6A" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="PolyRisk" />
+<meta name="apple-mobile-web-app-title" content="PolifarmaRisk" />
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" href="icon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="icon.svg" />
@@ -1044,7 +1044,7 @@
   function header() {
     return '' +
       '<header class="site-header"><div class="container">' +
-      '<div class="brand">PolyRisk <small>· congreso investigación · IA clínica</small></div>' +
+      '<div class="brand">PolifarmaRisk <small>· Algoritmo clínico</small></div>' +
       '<nav class="tabs">' +
       '<button class="' + (state.view === "home" ? "active" : "") + '" onclick="PolyRisk.setView(\'home\')">Inicio</button>' +
       '<button class="' + (state.view === "form" ? "active" : "") + '" onclick="PolyRisk.startBlank()">Nuevo análisis</button>' +
@@ -1056,7 +1056,7 @@
     var cumNote = (typeof CUM_CATALOG !== "undefined")
       ? '<p style="margin-top:8px;">Catálogo de medicamentos, buscable por marca o principio activo (' + CUM_CATALOG.length + ' registros), extraído del <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">Código Único de Medicamentos (CUM) — INVIMA, datos.gov.co</a>.</p>'
       : "";
-    return '<footer class="site-footer"><div class="container"><p>PolyRisk · Herramienta de apoyo a la decisión clínica para polifarmacia en pacientes pluripatológicos. Contenido con fines educativos y de demostración para congreso de investigación — no sustituye el criterio clínico ni bases de datos regulatorias (DrugBank, Micromedex, STOPP/START). <a href="#" onclick="PolyRisk.goToReferences(); return false;">Ver referencias y evidencia</a>.</p>' + cumNote + "</div></footer>";
+    return '<footer class="site-footer"><div class="container"><p>PolifarmaRisk · Herramienta de apoyo a la decisión clínica para polifarmacia en pacientes pluripatológicos. Contenido con fines educativos y de demostración para congreso de investigación — no sustituye el criterio clínico ni bases de datos regulatorias (DrugBank, Micromedex, STOPP/START). <a href="#" onclick="PolyRisk.goToReferences(); return false;">Ver referencias y evidencia</a>.</p>' + cumNote + "</div></footer>";
   }
 
   function renderHome() {

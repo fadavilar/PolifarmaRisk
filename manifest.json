@@ -1,6 +1,6 @@
 {
-  "name": "PolyRisk — Análisis de Polifarmacia",
-  "short_name": "PolyRisk",
+  "name": "PolifarmaRisk — Análisis de Polifarmacia",
+  "short_name": "PolifarmaRisk",
   "description": "Analizador de riesgos de polifarmacia (interacciones, adherencia, LASA) para pacientes crónicos pluripatológicos.",
   "start_url": "./index.html",
   "scope": "./",
