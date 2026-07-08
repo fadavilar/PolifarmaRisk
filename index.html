@@ -518,6 +518,12 @@
   // (actualizado a febrero 2023, ismp.org/system/files/resources/2023-10/ISMP_ConfusedDrugNames_2023.pdf).
   // Los nombres genéricos en inglés del documento fuente equivalen a: glyburide=Glibenclamida,
   // metFORMIN/metroNIDAZOLE=Metformina/Metronidazol, dabigatran/vigabatrin=Dabigatrán/Vigabatrina.
+  //
+  // Colombia NO cuenta con un listado LASA oficial propio (a diferencia del ISMP en EE.UU.): el marco
+  // normativo nacional (Decreto 780/2016, Res. 1403/2007, Res. INVIMA 2024015321/2024) regula la
+  // farmacovigilancia y el servicio farmacéutico en general, pero no publica una lista LASA nacional.
+  // Por eso esta tabla se apoya en el listado ISMP (EE.UU., referencia internacional estándar) y se
+  // complementa con hallazgos de campo colombianos verificados, como el siguiente par:
   var LASA_PAIRS = [
     { a: "Glibenclamida", b: "Glipizida", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
     { a: "Hidroclorotiazida", b: "Hidralazina", type: "Fonética", risk: "Medio", src: "ISMP 2023" },
@@ -528,15 +534,21 @@
     { a: "Duloxetina", b: "Fluoxetina", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
     { a: "Metformina", b: "Metronidazol", type: "Fonética/Ortográfica", risk: "Alto", src: "ISMP 2023" },
     { a: "Dabigatrán", b: "Vigabatrina", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
-    { a: "Prednisona", b: "Prednisolona", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" }
+    { a: "Prednisona", b: "Prednisolona", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
+    { a: "Cefadroxilo", b: "Cefalexina", type: "Fonética", risk: "Medio", src: "Ortiz Isaza, U. de Antioquia 2026 (hallazgo de campo, droguería Medellín)" }
   ];
 
+  // Los tres arquetipos combinan HTA, DM2, obesidad, dislipidemia y (en Doña Rosa) ERC:
+  // esta agrupación no es arbitraria, sino el continuo cardiovascular-renal-metabólico (CKM)
+  // formalizado en la guía 2026 AHA/ACC/ADA/ASN (Circulation 2026;153, doi 10.1161/CIR.0000000000001453),
+  // la primera guía conjunta que reconoce la obesidad, la DM2, la ERC y la enfermedad cardiovascular
+  // como manifestaciones interconectadas de un mismo proceso fisiopatológico. Ver "Referencias".
   var PERSONAS = [
     {
       id: "pedro", initials: "DP", name: "Don Pedro", age: 72, gender: "male", imc: "28.5",
       conditions: ["HTA", "DM2", "Obesidad", "Dislipidemia", "EPOC"],
       cognitiveImpairment: true, lowSocialSupport: true, lowEducation: false,
-      summary: "72 años · varón · adulto mayor con soporte familiar limitado",
+      summary: "72 años · varón · adulto mayor con soporte familiar limitado · patrón cardiometabólico (HTA+DM2+obesidad+dislipidemia) sin afectación renal documentada",
       meds: [
         { name: "Enalapril", dosage: "10 mg", freq: "1x", route: "oral", indication: "HTA" },
         { name: "Amlodipina", dosage: "5 mg", freq: "1x", route: "oral", indication: "HTA" },
@@ -554,7 +566,7 @@
       id: "rosa", initials: "DR", name: "Doña Rosa", age: 68, gender: "female", imc: "26.8",
       conditions: ["HTA", "DM2", "ERC", "Depresion", "Artrosis"],
       cognitiveImpairment: false, lowSocialSupport: true, lowEducation: false,
-      summary: "68 años · mujer · ERC estadio 3b, vive sola",
+      summary: "68 años · mujer · ERC estadio 3b, vive sola · ejemplo de síndrome cardio-renal-metabólico (CKM) con afectación renal ya establecida",
       meds: [
         { name: "Losartán", dosage: "50 mg", freq: "1x", route: "oral", indication: "HTA" },
         { name: "Amlodipina", dosage: "5 mg", freq: "1x", route: "oral", indication: "HTA" },
@@ -570,7 +582,7 @@
       id: "carlos", initials: "DC", name: "Don Carlos", age: 54, gender: "male", imc: "34.2",
       conditions: ["Obesidad", "DM2", "Dislipidemia", "Depresion", "EPOC"],
       cognitiveImpairment: false, lowSocialSupport: false, lowEducation: false,
-      summary: "54 años · varón · activo laboralmente, fumador, baja conciencia de enfermedad",
+      summary: "54 años · varón · activo laboralmente, fumador, baja conciencia de enfermedad · fase temprana del continuo cardiometabólico (obesidad+DM2+dislipidemia), aún sin ERC ni evento cardiovascular",
       meds: [
         { name: "Semaglutida", dosage: "1 mg", freq: "sem", route: "oral", indication: "Obesidad / DM2" },
         { name: "Rosuvastatina", dosage: "20 mg", freq: "1x", route: "oral", indication: "Dislipidemia" },
@@ -596,14 +608,22 @@
       domain: "Riesgo de adherencia",
       items: [
         { t: "Adherence to Long-Term Therapies: Evidence for Action", a: "Organización Mundial de la Salud, 2003 — marco conceptual de factores de riesgo; no define la fórmula de puntuación usada aquí", u: "https://iris.who.int/handle/10665/42682" },
-        { t: "Multimorbidity: clinical assessment and management (NG56)", a: "NICE, 2016 — marco conceptual sobre carga de tratamiento y polifarmacia; no define una fórmula de puntuación", u: "https://www.nice.org.uk/guidance/ng56" }
+        { t: "Multimorbidity: clinical assessment and management (NG56)", a: "NICE, 2016 — marco conceptual sobre carga de tratamiento y polifarmacia; no define una fórmula de puntuación", u: "https://www.nice.org.uk/guidance/ng56" },
+        { t: "The Morisky Method for Measuring Medication Adherence in Older Adults With Chronic Diseases: A Cross-Sectional Study", a: "Afkhami S, Asadi F, Emami H, Sabahi A. Health Science Reports, 2025 — cita verificada (texto completo leído): estudio en 196 adultos mayores pluripatológicos que identifica autoeficacia, alfabetización en salud y soporte del cónyuge/familiar como los principales predictores de adherencia; fundamenta por qué el motor de riesgo suma puntos por deterioro cognitivo (+10), bajo nivel educativo (+5) y falta de apoyo social (+7)", u: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12037691/" }
       ]
     },
     {
       domain: "Confusión de medicamentos (LASA)",
       items: [
-        { t: "ISMP List of Confused Drug Names", a: "Institute for Safe Medication Practices, 2023 — cita verificada: los 10 pares de la tabla curada se comprobaron uno a uno contra este documento", u: "https://www.ismp.org/system/files/resources/2023-10/ISMP_ConfusedDrugNames_2023.pdf" },
-        { t: "Prevención de errores por confusión en los nombres de los medicamentos", a: "ISMP-España — lectura de referencia general", u: "https://www.ismp-espana.org/documentos/view/63" }
+        { t: "ISMP List of Confused Drug Names", a: "Institute for Safe Medication Practices, 2023 — cita verificada: los 10 pares base de la tabla se comprobaron uno a uno contra este documento", u: "https://www.ismp.org/system/files/resources/2023-10/ISMP_ConfusedDrugNames_2023.pdf" },
+        { t: "Prevención de errores por confusión en los nombres de los medicamentos", a: "ISMP-España — lectura de referencia general", u: "https://www.ismp-espana.org/documentos/view/63" },
+        { t: "Gestión segura de medicamentos LASA: estrategias para prevenir errores de dispensación en Droguerías Aliadas", a: "Ortiz Isaza G., trabajo de grado, Tecnología en Regencia de Farmacia, Universidad de Antioquia, 2026 — cita verificada (texto completo leído): confirma que Colombia no tiene un listado LASA oficial propio (el país regula la farmacovigilancia en general, no una lista LASA específica) y documenta en campo el par Cefadroxilo/Cefalexina por similitud fonética", u: "https://bibliotecadigital.udea.edu.co/server/api/core/bitstreams/8df279ed-6b27-4eda-82cc-9aa7b7456137/content" }
+      ]
+    },
+    {
+      domain: "Fundamento clínico de los arquetipos",
+      items: [
+        { t: "2026 AHA/ACC/ADA/ASN Guideline for the Prevention, Detection, Evaluation, and Management of Cardiovascular-Kidney-Metabolic Syndrome", a: "Circulation, 2026;153 — primera guía conjunta AHA/ACC/ADA/ASN sobre el síndrome cardio-renal-metabólico (CKM). Verificación indirecta: el artículo original está bloqueado por paywall; su contenido (definición del síndrome CKM y estadificación 0–4) se corroboró de forma cruzada en resúmenes técnicos independientes de JACC, ACC.org y professional.heart.org (AHA). Fundamenta por qué los arquetipos de la app agrupan HTA+DM2+obesidad+dislipidemia(+ERC) como un continuo fisiopatológico reconocido, y no como una combinación arbitraria de comorbilidades", u: "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001453" }
       ]
     }
   ];
