@@ -205,6 +205,7 @@
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
   .print-only-title { display: none; }
+  .print-methodology { display: none; }
 
   .finding { border: 1px solid var(--border); border-left: 4px solid var(--stripe, var(--border)); border-radius: 10px; padding: 16px 18px; background: var(--surface); margin-bottom: 12px; }
   .finding-head { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
@@ -238,9 +239,12 @@
     section { padding: 8px 0; }
     .tab-panel { display: block !important; break-inside: avoid; margin-bottom: 18px; }
     .print-only-title { display: block !important; font-family: var(--font-display); font-size: 1.2rem; margin: 18px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
-    .card, .risk-card, .finding, .persona-card, .overall-banner { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+    .card, .risk-card, .finding, .persona-card, .overall-banner, .refs-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
     .overall-banner { display: block; }
     .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    .print-methodology { display: block !important; margin-top: 24px; }
+    .refs-section { grid-template-columns: 1fr; }
+    .refs-card li a { color: #0B4F4C; }
   }
 </style>
 
@@ -1287,6 +1291,11 @@
       '<div class="card card-pad" style="margin-bottom:24px;"><p class="subtle-title">Medicamentos analizados</p><div class="med-list">' + medList + "</div></div>" +
       '<div class="detail-tabs">' + tabs + "</div>" +
       body +
+      '<div class="print-methodology">' +
+      '<h3 class="print-only-title">Metodología y referencias</h3>' +
+      '<p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Cada hallazgo de este informe cita su fuente ("Fuente: ...") junto a la recomendación. Bibliografía completa a continuación.</p>' +
+      renderReferences() +
+      "</div>" +
       "</section>";
   }
 
