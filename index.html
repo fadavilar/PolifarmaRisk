@@ -1,0 +1,1444 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PolyRisk — Análisis de Polifarmacia</title>
+<meta name="description" content="Analizador de riesgos de polifarmacia (interacciones, adherencia, LASA) para pacientes crónicos pluripatológicos." />
+<meta name="theme-color" content="#0F6E6A" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="PolyRisk" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<script src="cum-catalog.js"></script>
+</head>
+<body>
+<style>
+  :root {
+    --bg: #F2F5F4;
+    --surface: #FFFFFF;
+    --surface-2: #E7ECEA;
+    --text: #10201E;
+    --text-muted: #4B615D;
+    --accent: #0F6E6A;
+    --accent-strong: #0B4F4C;
+    --accent-soft: #DCEEEC;
+    --border: #D3DBD8;
+    --risk-low: #256B4E; --risk-low-bg: #E3F1E9;
+    --risk-medium: #97650A; --risk-medium-bg: #FBF0DC;
+    --risk-high: #A93A32; --risk-high-bg: #FBE7E4;
+    --shadow: 0 1px 2px rgba(16,32,30,0.07), 0 10px 28px -14px rgba(16,32,30,0.22);
+    --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0B1615; --surface:#11201E; --surface-2:#172926; --text:#EAF1EF; --text-muted:#9FB5B0;
+      --accent:#4FC3B8; --accent-strong:#8FE4D9; --accent-soft:#173330; --border:#24403C;
+      --risk-low:#5FCB93; --risk-low-bg:#0F2A1E;
+      --risk-medium:#E3B25C; --risk-medium-bg:#31260F;
+      --risk-high:#E67C71; --risk-high-bg:#331714;
+      --shadow: 0 1px 2px rgba(0,0,0,0.5), 0 10px 28px -14px rgba(0,0,0,0.65);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#0B1615; --surface:#11201E; --surface-2:#172926; --text:#EAF1EF; --text-muted:#9FB5B0;
+    --accent:#4FC3B8; --accent-strong:#8FE4D9; --accent-soft:#173330; --border:#24403C;
+    --risk-low:#5FCB93; --risk-low-bg:#0F2A1E;
+    --risk-medium:#E3B25C; --risk-medium-bg:#31260F;
+    --risk-high:#E67C71; --risk-high-bg:#331714;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #F2F5F4; --surface: #FFFFFF; --surface-2: #E7ECEA; --text: #10201E; --text-muted: #4B615D;
+    --accent: #0F6E6A; --accent-strong: #0B4F4C; --accent-soft: #DCEEEC; --border: #D3DBD8;
+    --risk-low: #256B4E; --risk-low-bg: #E3F1E9;
+    --risk-medium: #97650A; --risk-medium-bg: #FBF0DC;
+    --risk-high: #A93A32; --risk-high-bg: #FBE7E4;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { min-height: 100vh; }
+  a { color: var(--accent-strong); }
+  abbr[title] { text-decoration: underline dotted; text-underline-offset: 2px; cursor: help; }
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+  .site-header {
+    position: sticky; top: 0; z-index: 20;
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .site-header .container { display:flex; align-items:center; justify-content:space-between; height: 64px; gap: 16px; }
+  .brand { display:flex; align-items:baseline; gap:8px; font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; letter-spacing: 0.01em; }
+  .brand small { font-family: var(--font-mono); font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  nav.tabs { display:flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; }
+  nav.tabs button {
+    border:none; background: transparent; color: var(--text-muted); font-size: 0.85rem; font-weight: 600;
+    padding: 8px 14px; border-radius: 7px; transition: background .15s, color .15s;
+  }
+  nav.tabs button.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+  nav.tabs button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .hero { padding: 72px 0 48px; }
+  .eyebrow { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.72rem; color: var(--accent-strong); margin: 0 0 14px; }
+  h1.display { font-family: var(--font-display); font-size: clamp(2.1rem, 4vw, 3.1rem); line-height: 1.12; margin: 0 0 20px; text-wrap: balance; font-weight: 600; }
+  .lede { font-size: 1.08rem; color: var(--text-muted); max-width: 60ch; margin: 0 0 28px; }
+  .btn { display:inline-flex; align-items:center; gap:8px; border-radius: 9px; padding: 11px 20px; font-size: 0.92rem; font-weight: 600; border: 1px solid transparent; transition: transform .1s, box-shadow .15s, background .15s; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .btn-sm { padding: 7px 12px; font-size: 0.8rem; }
+  .btn-danger-ghost { background: transparent; color: var(--risk-high); border: 1px solid transparent; }
+  .btn-danger-ghost:hover { background: var(--risk-high-bg); }
+
+  section { padding: 40px 0; }
+  h2.section-title { font-family: var(--font-display); font-size: 1.7rem; margin: 0 0 6px; font-weight: 600; }
+  p.section-sub { color: var(--text-muted); margin: 0 0 28px; max-width: 62ch; }
+
+  .persona-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .persona-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; box-shadow: var(--shadow); display:flex; flex-direction:column; gap: 14px; }
+  .persona-head { display:flex; align-items:center; gap: 14px; }
+  .persona-avatar { width:48px; height:48px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-strong); display:flex; align-items:center; justify-content:center; font-family: var(--font-display); font-weight:700; font-size:1.1rem; flex-shrink:0; }
+  .persona-name { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; margin:0; }
+  .persona-meta { color: var(--text-muted); font-size: 0.82rem; margin: 2px 0 0; }
+  .persona-tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { font-size: 0.72rem; background: var(--surface-2); color: var(--text-muted); padding: 4px 9px; border-radius: 999px; border: 1px solid var(--border); }
+  .persona-foot { display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top: 8px; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--text-muted); }
+
+  .feature-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap: 18px; }
+  .feature-card { background: var(--surface); border:1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .feature-icon { width: 38px; height:38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-strong); display:flex; align-items:center; justify-content:center; margin-bottom: 12px; }
+  .feature-card h3 { font-size: 1rem; margin: 0 0 6px; }
+  .feature-card p { font-size: 0.86rem; color: var(--text-muted); margin:0; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); }
+  .card-pad { padding: 22px; }
+  .card + .card { margin-top: 18px; }
+  .form-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 16px; }
+  .field label { display:block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
+  .field input, .field select, .field textarea {
+    width:100%; padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.92rem; font-family: inherit;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent); }
+  .checklist { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap: 10px; }
+  .check-row { display:flex; align-items:flex-start; gap:9px; font-size: 0.88rem; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; }
+  .check-row input { margin-top: 3px; }
+  .check-row.checked { border-color: var(--accent); background: var(--accent-soft); }
+  .subtle-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin: 0 0 12px; }
+
+  .med-picker { display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 12px; align-items:end; }
+  .med-list { display:flex; flex-direction:column; gap: 8px; margin-top: 16px; }
+
+  .cum-box { margin-top: 22px; padding-top: 18px; border-top: 1px dashed var(--border); }
+  .cum-source { font-size: 0.76rem; color: var(--text-muted); margin: 4px 0 12px; }
+  .cum-source a { color: var(--accent-strong); }
+  .cum-results { display:flex; flex-direction:column; gap: 6px; max-height: 260px; overflow-y: auto; margin-top: 10px; }
+  .cum-item { display:flex; align-items:center; justify-content:space-between; gap: 12px; padding: 9px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+  .cum-item-name { font-size: 0.86rem; font-weight: 600; }
+  .cum-item-meta { font-size: 0.74rem; color: var(--text-muted); font-family: var(--font-mono); }
+  .cum-count { font-size: 0.76rem; color: var(--text-muted); margin-top: 8px; }
+
+  .steps-strip { display:flex; flex-wrap:wrap; gap: 18px; background: var(--accent-soft); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; }
+  .step-item { display:flex; align-items:center; gap: 8px; font-size: 0.82rem; color: var(--text); }
+  .step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 0.7rem; font-weight: 700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  .quick-pick-hint { font-size: 0.85rem; color: var(--text-muted); padding: 12px 14px; background: var(--bg); border: 1px dashed var(--border); border-radius: 9px; margin-bottom: 4px; }
+  .quick-group { margin-bottom: 16px; }
+  .quick-group-title { font-size: 0.82rem; font-weight: 700; margin: 14px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .quick-class-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin: 10px 0 6px; }
+  .quick-rows { display:grid; grid-template-columns: repeat(auto-fill, minmax(230px,1fr)); gap: 8px; }
+  .quick-row { display:flex; align-items:center; gap: 8px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 0.84rem; cursor: pointer; }
+  .quick-row.checked { border-color: var(--accent); background: var(--accent-soft); }
+  .quick-row input { flex-shrink: 0; }
+  .quick-row .quick-dose { margin-left: auto; font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; }
+
+  .refs-section { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 18px; }
+  .refs-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+  .refs-card h3 { font-size: 0.95rem; margin: 0 0 12px; }
+  .refs-card ol { margin: 0; padding-left: 18px; display:flex; flex-direction:column; gap: 8px; }
+  .refs-card li { font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; }
+  .refs-card li a { font-weight: 600; }
+  .med-row { display:flex; align-items:center; justify-content:space-between; gap: 12px; padding: 10px 14px; background: var(--bg); border:1px solid var(--border); border-radius: 9px; }
+  .med-row .med-name { font-weight: 600; font-size: 0.9rem; }
+  .med-row .med-detail { font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono); }
+
+  .summary-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap: 18px; margin-bottom: 18px; }
+  .risk-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); position:relative; overflow:hidden; }
+  .risk-card::before { content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--stripe, var(--border)); }
+  .risk-card h4 { margin: 0 0 4px; font-size: 0.85rem; color: var(--text-muted); font-weight:600; }
+  .risk-score { font-family: var(--font-display); font-size: 2.2rem; font-weight: 700; margin: 2px 0 8px; font-variant-numeric: tabular-nums; }
+  .meter { height: 8px; border-radius: 999px; background: var(--surface-2); overflow:hidden; margin-bottom: 10px; }
+  .meter > span { display:block; height:100%; border-radius: 999px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-size: 0.74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .pill-low { background: var(--risk-low-bg); color: var(--risk-low); }
+  .pill-medium { background: var(--risk-medium-bg); color: var(--risk-medium); }
+  .pill-high { background: var(--risk-high-bg); color: var(--risk-high); }
+
+  .overall-banner { display:flex; align-items:center; justify-content:space-between; gap: 20px; flex-wrap:wrap; padding: 26px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 24px; }
+  .overall-banner .label { font-family: var(--font-mono); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; }
+  .overall-banner .value { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; }
+
+  .detail-tabs { display:flex; gap: 6px; margin-bottom: 18px; flex-wrap:wrap; border-bottom: 1px solid var(--border); }
+  .detail-tabs button { background:none; border:none; padding: 10px 4px; margin-right: 18px; font-size: 0.88rem; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; }
+  .detail-tabs button.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .print-only-title { display: none; }
+
+  .finding { border: 1px solid var(--border); border-left: 4px solid var(--stripe, var(--border)); border-radius: 10px; padding: 16px 18px; background: var(--surface); margin-bottom: 12px; }
+  .finding-head { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .finding-pair { font-weight: 700; font-size: 0.98rem; }
+  .finding-mech { color: var(--text-muted); font-size: 0.82rem; margin: 0 0 10px; }
+  .finding-reco { background: var(--accent-soft); border-radius: 8px; padding: 10px 13px; font-size: 0.85rem; color: var(--text); }
+  .finding-reco b { color: var(--accent-strong); }
+  .empty-state { display:flex; align-items:center; gap: 12px; padding: 18px; background: var(--risk-low-bg); color: var(--risk-low); border-radius: 10px; font-size: 0.9rem; font-weight: 600; }
+
+  .rec-item { display:flex; gap: 10px; padding: 12px 14px; background: var(--bg); border-radius: 9px; margin-bottom: 8px; font-size: 0.88rem; }
+  .rec-item svg { flex-shrink:0; margin-top: 2px; }
+
+  footer.site-footer { border-top: 1px solid var(--border); padding: 28px 0; margin-top: 40px; }
+  footer.site-footer p { color: var(--text-muted); font-size: 0.8rem; margin:0; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--text); color: var(--bg); padding: 11px 18px; border-radius: 9px; font-size: 0.85rem; opacity:0; pointer-events:none; transition: opacity .2s, transform .2s; z-index: 50; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (max-width: 640px) {
+    .med-picker { grid-template-columns: 1fr 1fr; }
+    .hero { padding: 44px 0 32px; }
+  }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { background: #fff; color: #10201E; }
+    .site-header, .site-footer, .detail-tabs, .btn, .steps-strip, .cum-box,
+    .quick-pick-hint, .toast, a[href]::after { display: none !important; }
+    .container { max-width: 100%; padding: 0; }
+    section { padding: 8px 0; }
+    .tab-panel { display: block !important; break-inside: avoid; margin-bottom: 18px; }
+    .print-only-title { display: block !important; font-family: var(--font-display); font-size: 1.2rem; margin: 18px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 6px; }
+    .card, .risk-card, .finding, .persona-card, .overall-banner { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
+    .overall-banner { display: block; }
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------------------
+   * 1. DATOS CLÍNICOS
+   * ------------------------------------------------------------------- */
+
+  var CONDITIONS = [
+    { id: "HTA", label: "Hipertensión Arterial" },
+    { id: "DM2", label: "Diabetes Mellitus Tipo 2" },
+    { id: "Dislipidemia", label: "Dislipidemia" },
+    { id: "EPOC", label: "EPOC" },
+    { id: "Obesidad", label: "Obesidad" },
+    { id: "ICC", label: "Insuficiencia Cardíaca Crónica" },
+    { id: "ERC", label: "Enfermedad Renal Crónica" },
+    { id: "Artrosis", label: "Artrosis / Dolor Crónico" },
+    { id: "Depresion", label: "Depresión / Ansiedad" },
+    { id: "FA", label: "Fibrilación Auricular / Riesgo Trombótico" }
+  ];
+
+  // name -> { class, group, defaultDosage, defaultRoute }
+  var MED_CATALOG = {
+    HTA: [
+      { name: "Enalapril", cls: "IECA", dosage: "10 mg", freq: "1x" },
+      { name: "Lisinopril", cls: "IECA", dosage: "20 mg", freq: "1x" },
+      { name: "Ramipril", cls: "IECA", dosage: "5 mg", freq: "1x" },
+      { name: "Losartán", cls: "ARAII", dosage: "50 mg", freq: "1x" },
+      { name: "Valsartán", cls: "ARAII", dosage: "80 mg", freq: "1x" },
+      { name: "Irbesartán", cls: "ARAII", dosage: "150 mg", freq: "1x" },
+      { name: "Metoprolol", cls: "BB_Cardio", dosage: "50 mg", freq: "2x" },
+      { name: "Atenolol", cls: "BB_NoSelectivo", dosage: "50 mg", freq: "1x" },
+      { name: "Bisoprolol", cls: "BB_Cardio", dosage: "5 mg", freq: "1x" },
+      { name: "Amlodipina", cls: "BCC_DHP", dosage: "5 mg", freq: "1x" },
+      { name: "Nifedipina", cls: "BCC_DHP", dosage: "30 mg", freq: "1x" },
+      { name: "Diltiazem", cls: "BCC_NoDHP", dosage: "120 mg", freq: "2x" },
+      { name: "Hidroclorotiazida", cls: "Diuretico_Tiazidico", dosage: "25 mg", freq: "1x" },
+      { name: "Furosemida", cls: "Diuretico_Asa", dosage: "40 mg", freq: "1x" },
+      { name: "Espironolactona", cls: "AntagonistaMineralocorticoide", dosage: "25 mg", freq: "1x" }
+    ],
+    DM2: [
+      { name: "Metformina", cls: "Biguanida", dosage: "850 mg", freq: "2x" },
+      { name: "Glibenclamida", cls: "Sulfonilurea", dosage: "5 mg", freq: "2x" },
+      { name: "Glipizida", cls: "Sulfonilurea", dosage: "5 mg", freq: "2x" },
+      { name: "Gliclazida", cls: "Sulfonilurea", dosage: "60 mg", freq: "1x" },
+      { name: "Sitagliptina", cls: "iDPP4", dosage: "100 mg", freq: "1x" },
+      { name: "Vildagliptina", cls: "iDPP4", dosage: "50 mg", freq: "2x" },
+      { name: "Semaglutida", cls: "AgonistaGLP1", dosage: "1 mg", freq: "sem" },
+      { name: "Dulaglutida", cls: "AgonistaGLP1", dosage: "1.5 mg", freq: "sem" },
+      { name: "Empagliflozina", cls: "iSGLT2", dosage: "10 mg", freq: "1x" },
+      { name: "Canagliflozina", cls: "iSGLT2", dosage: "100 mg", freq: "1x" }
+    ],
+    Dislipidemia: [
+      { name: "Atorvastatina", cls: "Estatina", dosage: "40 mg", freq: "1x" },
+      { name: "Simvastatina", cls: "Estatina", dosage: "20 mg", freq: "1x" },
+      { name: "Rosuvastatina", cls: "Estatina", dosage: "20 mg", freq: "1x" },
+      { name: "Pravastatina", cls: "Estatina", dosage: "40 mg", freq: "1x" },
+      { name: "Fenofibrato", cls: "Fibrato", dosage: "145 mg", freq: "1x" },
+      { name: "Bezafibrato", cls: "Fibrato", dosage: "400 mg", freq: "1x" },
+      { name: "Evolocumab", cls: "iPCSK9", dosage: "140 mg", freq: "sem" },
+      { name: "Alirocumab", cls: "iPCSK9", dosage: "75 mg", freq: "sem" },
+      { name: "Ezetimiba", cls: "Ezetimiba", dosage: "10 mg", freq: "1x" }
+    ],
+    EPOC: [
+      { name: "Salbutamol", cls: "Beta2Agonista", dosage: "100 mcg", route: "inhalation", freq: "prn" },
+      { name: "Formoterol", cls: "Beta2Agonista", dosage: "12 mcg", route: "inhalation", freq: "2x" },
+      { name: "Salmeterol", cls: "Beta2Agonista", dosage: "50 mcg", route: "inhalation", freq: "2x" },
+      { name: "Ipratropio", cls: "Anticolinergico", dosage: "20 mcg", route: "inhalation", freq: "3x" },
+      { name: "Tiotropio", cls: "Anticolinergico", dosage: "18 mcg", route: "inhalation", freq: "1x" },
+      { name: "Beclometasona", cls: "CorticoideInhalado", dosage: "200 mcg", route: "inhalation", freq: "2x" },
+      { name: "Fluticasona", cls: "CorticoideInhalado", dosage: "250 mcg", route: "inhalation", freq: "2x" },
+      { name: "Budesonida", cls: "CorticoideInhalado", dosage: "200 mcg", route: "inhalation", freq: "2x" },
+      { name: "Teofilina", cls: "Metilxantina", dosage: "300 mg", freq: "2x" }
+    ],
+    Obesidad: [
+      { name: "Orlistat", cls: "InhibidorLipasa", dosage: "120 mg", freq: "3x" },
+      { name: "Tirzepatida", cls: "AgonistaGLP1", dosage: "5 mg", freq: "sem" },
+      { name: "Fluoxetina", cls: "ISRS", dosage: "20 mg", freq: "1x" },
+      { name: "Sertralina", cls: "ISRS", dosage: "50 mg", freq: "1x" }
+    ],
+    ICC: [
+      { name: "Sacubitrilo/Valsartán", cls: "ARNI", dosage: "24/26 mg", freq: "2x" },
+      { name: "Eplerenona", cls: "AntagonistaMineralocorticoide", dosage: "25 mg", freq: "1x" },
+      { name: "Dapagliflozina", cls: "iSGLT2", dosage: "10 mg", freq: "1x" },
+      { name: "Torasemida", cls: "Diuretico_Asa", dosage: "10 mg", freq: "1x" },
+      { name: "Carvedilol", cls: "BB_Cardio", dosage: "25 mg", freq: "2x" }
+    ],
+    ERC: [
+      { name: "Sevelámero", cls: "QuelanteFosfato", dosage: "800 mg", freq: "3x" },
+      { name: "Carbonato de calcio", cls: "QuelanteFosfato", dosage: "500 mg", freq: "3x" },
+      { name: "Calcitriol", cls: "AnalogoVitD", dosage: "0.25 mcg", freq: "1x" },
+      { name: "Epoetina alfa", cls: "EPO", dosage: "4000 UI", freq: "sem" }
+    ],
+    Artrosis: [
+      { name: "Ibuprofeno", cls: "AINE", dosage: "400 mg", freq: "prn" },
+      { name: "Naproxeno", cls: "AINE", dosage: "500 mg", freq: "2x" },
+      { name: "Diclofenaco", cls: "AINE", dosage: "50 mg", freq: "2x" },
+      { name: "Meloxicam", cls: "AINE", dosage: "15 mg", freq: "1x" },
+      { name: "Paracetamol", cls: "Analgesico_Simple", dosage: "1 g", freq: "prn" },
+      { name: "Tramadol", cls: "OpioideMenor", dosage: "50 mg", freq: "prn" },
+      { name: "Codeína", cls: "OpioideMenor", dosage: "30 mg", freq: "prn" }
+    ],
+    Depresion: [
+      { name: "Escitalopram", cls: "ISRS", dosage: "10 mg", freq: "1x" },
+      { name: "Paroxetina", cls: "ISRS", dosage: "20 mg", freq: "1x" },
+      { name: "Sertralina", cls: "ISRS", dosage: "50 mg", freq: "1x" },
+      { name: "Venlafaxina", cls: "IRSN", dosage: "75 mg", freq: "1x" },
+      { name: "Duloxetina", cls: "IRSN", dosage: "60 mg", freq: "1x" },
+      { name: "Alprazolam", cls: "Benzodiacepina", dosage: "0.5 mg", freq: "prn" },
+      { name: "Lorazepam", cls: "Benzodiacepina", dosage: "1 mg", freq: "prn" },
+      { name: "Diazepam", cls: "Benzodiacepina", dosage: "5 mg", freq: "prn" },
+      { name: "Clonazepam", cls: "Benzodiacepina", dosage: "0.5 mg", freq: "2x" }
+    ],
+    FA: [
+      { name: "Apixabán", cls: "ACOD", dosage: "5 mg", freq: "2x" },
+      { name: "Rivaroxabán", cls: "ACOD", dosage: "20 mg", freq: "1x" },
+      { name: "Dabigatrán", cls: "ACOD", dosage: "150 mg", freq: "2x" },
+      { name: "Warfarina", cls: "AVK", dosage: "5 mg", freq: "1x" },
+      { name: "Acenocumarol", cls: "AVK", dosage: "4 mg", freq: "1x" },
+      { name: "Ácido acetilsalicílico", cls: "Antiagregante", dosage: "100 mg", freq: "1x" },
+      { name: "Clopidogrel", cls: "Antiagregante", dosage: "75 mg", freq: "1x" }
+    ],
+    Otros: [
+      { name: "Omeprazol", cls: "IBP", dosage: "20 mg", freq: "1x" },
+      { name: "Pantoprazol", cls: "IBP", dosage: "40 mg", freq: "1x" },
+      { name: "Ciprofloxacino", cls: "Antibiotico", dosage: "500 mg", freq: "2x" }
+    ]
+  };
+
+  var CLASS_LABELS = {
+    IECA: "IECA", ARAII: "ARA II", BB_Cardio: "Beta-bloqueante cardioselectivo",
+    BB_NoSelectivo: "Beta-bloqueante no selectivo", BCC_DHP: "Bloqueador de calcio (dihidropiridínico)",
+    BCC_NoDHP: "Bloqueador de calcio (no dihidropiridínico)", Diuretico_Tiazidico: "Diurético tiazídico",
+    Diuretico_Asa: "Diurético de asa", AntagonistaMineralocorticoide: "Antagonista mineralocorticoide",
+    Biguanida: "Biguanida", Sulfonilurea: "Sulfonilurea", iDPP4: "Inhibidor DPP-4",
+    AgonistaGLP1: "Agonista GLP-1", iSGLT2: "Inhibidor SGLT2", Estatina: "Estatina", Fibrato: "Fibrato",
+    iPCSK9: "Inhibidor PCSK9", Ezetimiba: "Ezetimiba", Beta2Agonista: "Beta-2 agonista",
+    Anticolinergico: "Anticolinérgico inhalado", CorticoideInhalado: "Corticoide inhalado",
+    Metilxantina: "Metilxantina", InhibidorLipasa: "Inhibidor de lipasa", ARNI: "ARNI",
+    QuelanteFosfato: "Quelante de fósforo", AnalogoVitD: "Análogo de vitamina D", EPO: "Estimulante de eritropoyesis",
+    AINE: "AINE", Analgesico_Simple: "Analgésico simple", OpioideMenor: "Opioide menor", ISRS: "ISRS",
+    IRSN: "IRSN", Benzodiacepina: "Benzodiacepina", ACOD: "Anticoagulante directo (ACOD)", AVK: "Antagonista de vitamina K",
+    Antiagregante: "Antiagregante", IBP: "Inhibidor de bomba de protones", Antibiotico: "Antibiótico"
+  };
+
+  var FREQUENCIES = [
+    { v: "1x", label: "1 vez al día", pts: 0 },
+    { v: "2x", label: "2 veces al día", pts: 5 },
+    { v: "3x", label: "3 veces al día", pts: 10 },
+    { v: "4x", label: "4+ veces al día", pts: 15 },
+    { v: "irregular", label: "Horarios irregulares", pts: 20 },
+    { v: "prn", label: "Según necesidad (PRN)", pts: 6 },
+    { v: "sem", label: "Semanal", pts: 0 }
+  ];
+
+  var ROUTES = { oral: "Oral", inhalation: "Inhalatoria", topical: "Tópica", other: "Otra" };
+
+  // Reglas explícitas por nombre exacto (normalizado)
+  // GENERAL_SRC: interacción de farmacología general (mecanismo/severidad ampliamente documentados
+  // en referencias como StatPearls/Drug Interactions), pero NO encontrada como criterio numerado explícito
+  // al revisar el texto completo de STOPP/START v3 (Delgado-Silveira et al. 2023, Rev Esp Geriatr Gerontol
+  // 58:101407, doi.org/10.1016/j.regg.2023.101407 — 133 criterios STOPP + 57 START revisados en su totalidad
+  // el 2026-07-07) ni de AGS Beers Criteria 2023. Distinto de las reglas con cita específica abajo.
+  var GENERAL_SRC = "Farmacología general — revisado contra STOPP/START v3 completo, sin coincidencia exacta";
+  var STOPP3 = "STOPP/START v3 (Delgado-Silveira et al. 2023, Rev Esp Geriatr Gerontol 58:101407) — criterio ";
+
+  var NAME_PAIR_RULES = [
+    { a: "Enalapril", b: "Metformina", severity: "grave", mechanism: "Potenciación del efecto hipoglucemiante",
+      description: "La combinación puede aumentar el riesgo de hipoglucemia, especialmente en insuficiencia renal leve.",
+      recommendation: "Monitorear glucemia capilar; ajustar dosis de metformina si aparecen síntomas.", src: GENERAL_SRC },
+    { a: "Clopidogrel", b: "Omeprazol", severity: "moderada", mechanism: "Inhibición de CYP2C19",
+      description: "El omeprazol reduce la activación metabólica del clopidogrel, disminuyendo su efecto antiagregante.",
+      recommendation: "Sustituir por pantoprazol, que no interfiere de forma relevante con CYP2C19.", src: GENERAL_SRC },
+    { a: "Atorvastatina", b: "Omeprazol", severity: "leve", mechanism: "Interacción leve por CYP3A4",
+      description: "Ligero aumento de los niveles séricos de atorvastatina.",
+      recommendation: "Monitorear efectos adversos musculares; no suele requerir ajuste.", src: GENERAL_SRC },
+    { a: "Teofilina", b: "Ciprofloxacino", severity: "moderada", mechanism: "Inhibición del metabolismo hepático de teofilina",
+      description: "Aumento de los niveles séricos de teofilina con riesgo de toxicidad (náuseas, arritmias, convulsiones).",
+      recommendation: "Monitorear niveles de teofilina; considerar un antibiótico alternativo.", src: GENERAL_SRC }
+  ];
+
+  // Reglas por clase farmacológica (a y b son listas de alternativas — OR dentro de cada lado)
+  var CLASS_PAIR_RULES = [
+    { a: ["Estatina"], b: ["Fibrato"], severity: "grave", mechanism: "Inhibición aditiva del metabolismo muscular",
+      description: "Aumenta significativamente el riesgo de miopatía y rabdomiólisis.",
+      recommendation: "Evitar la combinación; si es imprescindible, usar dosis bajas y monitorizar CPK.", src: GENERAL_SRC },
+    { a: ["BB_NoSelectivo"], b: ["Beta2Agonista"], severity: "grave", mechanism: "Antagonismo del receptor beta-2",
+      description: "Puede antagonizar el efecto broncodilatador y empeorar los síntomas de EPOC/asma.",
+      recommendation: "Sustituir por un beta-bloqueante cardioselectivo (bisoprolol, metoprolol).", src: GENERAL_SRC },
+    { a: ["Diuretico_Tiazidico", "Diuretico_Asa"], b: ["AINE"], severity: "grave", mechanism: "Reducción de la perfusión renal por inhibición de prostaglandinas",
+      description: "Riesgo de insuficiencia renal aguda y reducción del efecto antihipertensivo.",
+      recommendation: "Evitar AINEs; usar paracetamol si es necesario; vigilar función renal.", src: GENERAL_SRC },
+    { a: ["AVK", "ACOD"], b: ["AINE"], severity: "grave", mechanism: "Potenciación anticoagulante y lesión de mucosa gastrointestinal",
+      description: "Riesgo de hemorragia digestiva grave con el uso conjunto de AINE y anticoagulantes orales (antagonistas de la vitamina K, inhibidores directos de la trombina o del factor Xa).",
+      recommendation: "Evitar AINEs; usar paracetamol y monitorear signos de sangrado (e INR si aplica).",
+      src: STOPP3 + "STOPP-C10 (verificado, texto exacto)" },
+    { a: ["ISRS"], b: ["OpioideMenor"], severity: "grave", mechanism: "Exceso de actividad serotoninérgica",
+      description: "Riesgo de síndrome serotoninérgico (agitación, hipertermia, hiperreflexia).",
+      recommendation: "Evitar la combinación; si es imprescindible, vigilancia clínica estrecha.", src: GENERAL_SRC },
+    { a: ["ISRS"], b: ["AVK", "ACOD"], severity: "moderada", mechanism: "Efecto antiagregante del ISRS sumado a la anticoagulación",
+      description: "Aumento del riesgo de sangrado por el efecto antiagregante de los ISRS, especialmente en pacientes con antecedentes de sangrado grave.",
+      recommendation: "Evitar si hay antecedentes de sangrado grave; si es imprescindible, vigilar signos de sangrado.",
+      src: STOPP3 + "STOPP-C12 (verificado, texto exacto) · también en AGS Beers Criteria 2023" },
+    { a: ["Benzodiacepina"], b: ["OpioideMenor"], severity: "grave", mechanism: "Depresión aditiva del sistema nervioso central",
+      description: "Aumenta el riesgo de sedación profunda y depresión respiratoria.",
+      recommendation: "Evitar combinación; usar la dosis mínima eficaz y monitorización estrecha.",
+      src: "AGS Beers Criteria 2023 — criterio revisado con más detalle sobre riesgos de coadministración con opioides (no encontrado como criterio combinado explícito en STOPP/START v3)" },
+    { a: ["IECA", "ARAII"], b: ["AINE"], severity: "moderada", mechanism: "Reducción de la síntesis de prostaglandinas renales",
+      description: "Puede reducir el efecto antihipertensivo y comprometer la función renal, especialmente en ERC.",
+      recommendation: "Evitar AINEs si es posible; usar paracetamol; vigilar función renal en pacientes con ERC.", src: GENERAL_SRC },
+    { a: ["BB_Cardio", "BB_NoSelectivo"], b: ["BCC_NoDHP"], severity: "moderada", mechanism: "Efecto cronotrópico/dromotrópico negativo aditivo",
+      description: "Riesgo de bloqueo cardíaco con la combinación de betabloqueantes y verapamilo o diltiazem.",
+      recommendation: "Monitorear frecuencia cardíaca y ECG; ajustar dosis.", src: STOPP3 + "STOPP-B3 (verificado, texto exacto)" },
+    { a: ["AntagonistaMineralocorticoide"], b: ["IECA", "ARAII"], severity: "moderada", mechanism: "Retención de potasio aditiva",
+      description: "Riesgo de hiperpotasemia grave (>6,0 mmol/l) si no se monitoriza el potasio sérico.",
+      recommendation: "Monitorear potasio sérico periódicamente (al menos cada 6 meses); ajustar dosis.",
+      src: STOPP3 + "STOPP-B13 (verificado, texto exacto)" },
+    { a: ["Estatina"], b: ["BCC_NoDHP"], severity: "moderada", mechanism: "Inhibición de CYP3A4",
+      description: "Aumento de los niveles séricos de la estatina.",
+      recommendation: "Usar dosis bajas de estatina o cambiar a una menos dependiente de CYP3A4 (rosuvastatina).", src: GENERAL_SRC },
+    { a: ["ACOD"], b: ["BCC_NoDHP"], severity: "moderada", mechanism: "Interacción farmacocinética (inhibición de glicoproteína P)",
+      description: "Aumento del riesgo de sangrado con inhibidores directos de la trombina (p. ej. dabigatrán) combinados con diltiazem o verapamilo.",
+      recommendation: "Vigilar signos de sangrado; considerar un ACOD alternativo si es posible.",
+      src: STOPP3 + "STOPP-C13 (verificado, texto exacto)" },
+    { a: ["Antiagregante"], b: ["AINE"], severity: "moderada", mechanism: "Efecto antitrombótico aditivo y lesión de mucosa gastrointestinal",
+      description: "Aumento del riesgo de sangrado.",
+      recommendation: "Evitar el uso prolongado; vigilar signos de sangrado.", src: GENERAL_SRC },
+    { a: ["BB_NoSelectivo"], b: ["Sulfonilurea"], severity: "moderada", mechanism: "Enmascaramiento adrenérgico de la hipoglucemia",
+      description: "Los betabloqueantes no cardioselectivos pueden enmascarar los síntomas adrenérgicos de la hipoglucemia inducida por sulfonilureas.",
+      recommendation: "Preferir un betabloqueante cardioselectivo; educar al paciente sobre síntomas no adrenérgicos de hipoglucemia.",
+      src: STOPP3 + "STOPP-J3 (verificado, texto exacto)" },
+    { a: ["IRSN"], b: ["AINE", "Antiagregante"], severity: "moderada", mechanism: "Inhibición de recaptación de serotonina y efecto antiplaquetario",
+      description: "Aumento del riesgo de sangrado.",
+      recommendation: "Vigilar signos de sangrado; considerar gastroprotección.", src: GENERAL_SRC },
+    { a: ["BCC_DHP"], b: ["Estatina"], severity: "leve", mechanism: "Inhibición leve de CYP3A4",
+      description: "Aumento leve de los niveles séricos de la estatina.",
+      recommendation: "Monitorear la aparición de efectos adversos musculares.", src: GENERAL_SRC }
+  ];
+
+  // Cada par verificado línea por línea contra ISMP List of Confused Drug Names
+  // (actualizado a febrero 2023, ismp.org/system/files/resources/2023-10/ISMP_ConfusedDrugNames_2023.pdf).
+  // Los nombres genéricos en inglés del documento fuente equivalen a: glyburide=Glibenclamida,
+  // metFORMIN/metroNIDAZOLE=Metformina/Metronidazol, dabigatran/vigabatrin=Dabigatrán/Vigabatrina.
+  var LASA_PAIRS = [
+    { a: "Glibenclamida", b: "Glipizida", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
+    { a: "Hidroclorotiazida", b: "Hidralazina", type: "Fonética", risk: "Medio", src: "ISMP 2023" },
+    { a: "Hidroclorotiazida", b: "Hidroxizina", type: "Fonética", risk: "Medio", src: "ISMP 2023" },
+    { a: "Sitagliptina", b: "Saxagliptina", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
+    { a: "Clonazepam", b: "Clozapina", type: "Fonética/Ortográfica", risk: "Alto", src: "ISMP 2023" },
+    { a: "Tramadol", b: "Trazodona", type: "Fonética", risk: "Alto", src: "ISMP 2023" },
+    { a: "Duloxetina", b: "Fluoxetina", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
+    { a: "Metformina", b: "Metronidazol", type: "Fonética/Ortográfica", risk: "Alto", src: "ISMP 2023" },
+    { a: "Dabigatrán", b: "Vigabatrina", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
+    { a: "Prednisona", b: "Prednisolona", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" }
+  ];
+
+  var PERSONAS = [
+    {
+      id: "pedro", initials: "DP", name: "Don Pedro", age: 72, gender: "male", imc: "28.5",
+      conditions: ["HTA", "DM2", "Obesidad", "Dislipidemia", "EPOC"],
+      cognitiveImpairment: true, lowSocialSupport: true, lowEducation: false,
+      summary: "72 años · varón · adulto mayor con soporte familiar limitado",
+      meds: [
+        { name: "Enalapril", dosage: "10 mg", freq: "1x", route: "oral", indication: "HTA" },
+        { name: "Amlodipina", dosage: "5 mg", freq: "1x", route: "oral", indication: "HTA" },
+        { name: "Hidroclorotiazida", dosage: "25 mg", freq: "1x", route: "oral", indication: "HTA" },
+        { name: "Metformina", dosage: "850 mg", freq: "2x", route: "oral", indication: "DM2" },
+        { name: "Glibenclamida", dosage: "5 mg", freq: "2x", route: "oral", indication: "DM2" },
+        { name: "Atorvastatina", dosage: "40 mg", freq: "1x", route: "oral", indication: "Dislipidemia" },
+        { name: "Fenofibrato", dosage: "145 mg", freq: "1x", route: "oral", indication: "Dislipidemia" },
+        { name: "Salbutamol", dosage: "100 mcg", freq: "3x", route: "inhalation", indication: "EPOC" },
+        { name: "Tiotropio", dosage: "18 mcg", freq: "1x", route: "inhalation", indication: "EPOC" },
+        { name: "Omeprazol", dosage: "20 mg", freq: "1x", route: "oral", indication: "Gastroprotección" }
+      ]
+    },
+    {
+      id: "rosa", initials: "DR", name: "Doña Rosa", age: 68, gender: "female", imc: "26.8",
+      conditions: ["HTA", "DM2", "ERC", "Depresion", "Artrosis"],
+      cognitiveImpairment: false, lowSocialSupport: true, lowEducation: false,
+      summary: "68 años · mujer · ERC estadio 3b, vive sola",
+      meds: [
+        { name: "Losartán", dosage: "50 mg", freq: "1x", route: "oral", indication: "HTA" },
+        { name: "Amlodipina", dosage: "5 mg", freq: "1x", route: "oral", indication: "HTA" },
+        { name: "Metformina", dosage: "500 mg", freq: "2x", route: "oral", indication: "DM2 (ajustada por ERC)" },
+        { name: "Empagliflozina", dosage: "10 mg", freq: "1x", route: "oral", indication: "DM2 / renoprotección" },
+        { name: "Sertralina", dosage: "50 mg", freq: "1x", route: "oral", indication: "Depresión" },
+        { name: "Ibuprofeno", dosage: "400 mg", freq: "prn", route: "oral", indication: "Artrosis (uso no supervisado)" },
+        { name: "Calcitriol", dosage: "0.25 mcg", freq: "1x", route: "oral", indication: "ERC" },
+        { name: "Paracetamol", dosage: "1 g", freq: "prn", route: "oral", indication: "Artrosis" }
+      ]
+    },
+    {
+      id: "carlos", initials: "DC", name: "Don Carlos", age: 54, gender: "male", imc: "34.2",
+      conditions: ["Obesidad", "DM2", "Dislipidemia", "Depresion", "EPOC"],
+      cognitiveImpairment: false, lowSocialSupport: false, lowEducation: false,
+      summary: "54 años · varón · activo laboralmente, fumador, baja conciencia de enfermedad",
+      meds: [
+        { name: "Semaglutida", dosage: "1 mg", freq: "sem", route: "oral", indication: "Obesidad / DM2" },
+        { name: "Rosuvastatina", dosage: "20 mg", freq: "1x", route: "oral", indication: "Dislipidemia" },
+        { name: "Alprazolam", dosage: "0.5 mg", freq: "prn", route: "oral", indication: "Ansiedad" },
+        { name: "Salbutamol", dosage: "100 mcg", freq: "prn", route: "inhalation", indication: "EPOC leve" },
+        { name: "Sitagliptina", dosage: "100 mg", freq: "1x", route: "oral", indication: "DM2" }
+      ]
+    }
+  ];
+
+  var REFERENCES = [
+    {
+      domain: "Interacciones medicamentosas",
+      items: [
+        { t: "Versión en español de los criterios STOPP/START 3", a: "Delgado-Silveira et al., Rev Esp Geriatr Gerontol 2023;58:101407 — cita verificada: texto completo revisado el 2026-07-07; fundamenta 6 reglas (AINE+anticoagulante, ISRS+anticoagulante, betabloqueante+verapamilo/diltiazem, antagonista mineralocorticoide+IECA/ARA-II, dabigatrán+verapamilo/diltiazem, betabloqueante no selectivo+sulfonilurea)", u: "https://doi.org/10.1016/j.regg.2023.101407" },
+        { t: "American Geriatrics Society 2023 Updated AGS Beers Criteria® for Potentially Inappropriate Medication Use in Older Adults", a: "J Am Geriatr Soc, 2023 — cita verificada: fundamenta la regla de benzodiacepina+opioide y corrobora ISRS+anticoagulante", u: "https://agsjournals.onlinelibrary.wiley.com/doi/10.1111/jgs.18372" },
+        { t: "Drug Interactions — StatPearls (actualizado periódicamente)", a: "NCBI Bookshelf, National Library of Medicine — lectura de referencia general para el resto de reglas, no verificada regla por regla", u: "https://www.ncbi.nlm.nih.gov/books/NBK583428/" }
+      ]
+    },
+    {
+      domain: "Riesgo de adherencia",
+      items: [
+        { t: "Adherence to Long-Term Therapies: Evidence for Action", a: "Organización Mundial de la Salud, 2003 — marco conceptual de factores de riesgo; no define la fórmula de puntuación usada aquí", u: "https://iris.who.int/handle/10665/42682" },
+        { t: "Multimorbidity: clinical assessment and management (NG56)", a: "NICE, 2016 — marco conceptual sobre carga de tratamiento y polifarmacia; no define una fórmula de puntuación", u: "https://www.nice.org.uk/guidance/ng56" }
+      ]
+    },
+    {
+      domain: "Confusión de medicamentos (LASA)",
+      items: [
+        { t: "ISMP List of Confused Drug Names", a: "Institute for Safe Medication Practices, 2023 — cita verificada: los 10 pares de la tabla curada se comprobaron uno a uno contra este documento", u: "https://www.ismp.org/system/files/resources/2023-10/ISMP_ConfusedDrugNames_2023.pdf" },
+        { t: "Prevención de errores por confusión en los nombres de los medicamentos", a: "ISMP-España — lectura de referencia general", u: "https://www.ismp-espana.org/documentos/view/63" }
+      ]
+    }
+  ];
+  if (typeof CUM_CATALOG !== "undefined") {
+    REFERENCES.push({
+      domain: "Catálogo de medicamentos",
+      items: [
+        { t: "Código Único de Medicamentos (CUM) — Registros vigentes", a: "INVIMA, vía datos.gov.co — Datos Abiertos Colombia. Extraído 2026-07-07; filtrado a registros \"Vigente\"/\"Activo\"; " + CUM_CATALOG.length + " principios activos únicos deduplicados. Fuente del buscador integrado en el formulario de medicamentos.", u: "https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" }
+      ]
+    });
+  }
+
+  /* ---------------------------------------------------------------------
+   * 2. UTILIDADES
+   * ------------------------------------------------------------------- */
+
+  var ACCENT_MAP = { "á":"a","à":"a","ä":"a","â":"a","é":"e","è":"e","ë":"e","ê":"e","í":"i","ì":"i","ï":"i","î":"i","ó":"o","ò":"o","ö":"o","ô":"o","ú":"u","ù":"u","ü":"u","û":"u","ñ":"n","ç":"c" };
+  function normalize(s) {
+    s = (s || "").toString().trim().toLowerCase();
+    var out = "";
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charAt(i);
+      out += ACCENT_MAP[ch] || ch;
+    }
+    return out;
+  }
+
+  function escapeHtml(s) {
+    return (s || "").toString().replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  var ACRONYMS = {
+    "HTA": "Hipertensión Arterial",
+    "DM2": "Diabetes Mellitus Tipo 2",
+    "EPOC": "Enfermedad Pulmonar Obstructiva Crónica",
+    "ICC": "Insuficiencia Cardíaca Crónica",
+    "ERC": "Enfermedad Renal Crónica",
+    "FA": "Fibrilación Auricular",
+    "LASA": "Look-Alike, Sound-Alike (medicamentos con nombre o aspecto similar)",
+    "IECA": "Inhibidor de la Enzima Convertidora de Angiotensina",
+    "ARA II": "Antagonista de los Receptores de Angiotensina II",
+    "AINEs": "Antiinflamatorios No Esteroideos",
+    "AINE": "Antiinflamatorio No Esteroideo",
+    "ISRS": "Inhibidor Selectivo de la Recaptación de Serotonina",
+    "IRSN": "Inhibidor de la Recaptación de Serotonina y Noradrenalina",
+    "ACOD": "Anticoagulante Oral Directo",
+    "AVK": "Antagonista de la Vitamina K",
+    "IBP": "Inhibidor de la Bomba de Protones",
+    "ARNI": "Inhibidor de la Neprilisina y del Receptor de Angiotensina",
+    "SGLT2": "Cotransportador de Sodio-Glucosa Tipo 2",
+    "DPP-4": "Dipeptidil Peptidasa 4",
+    "GLP-1": "Péptido Similar al Glucagón Tipo 1",
+    "PCSK9": "Proproteína Convertasa Subtilisina/Kexina Tipo 9",
+    "CYP3A4": "Citocromo P450 3A4 (enzima hepática que metaboliza fármacos)",
+    "CYP2C19": "Citocromo P450 2C19 (enzima hepática que metaboliza fármacos)",
+    "CPK": "Creatina Fosfoquinasa (marcador de daño muscular)",
+    "INR": "Razón Internacional Normalizada (control de anticoagulación)",
+    "TFG": "Tasa de Filtración Glomerular (medida de función renal)",
+    "ATC": "Anatomical Therapeutic Chemical (clasificación anatómica-terapéutica-química)",
+    "CUM": "Código Único de Medicamentos (INVIMA, Colombia)",
+    "IMC": "Índice de Masa Corporal",
+    "ISMP": "Institute for Safe Medication Practices",
+    "PRN": "Pro Re Nata — según necesidad"
+  };
+  var ACRONYM_KEYS = Object.keys(ACRONYMS).sort(function (a, b) { return b.length - a.length; });
+
+  function withAbbr(text) {
+    if (!text) return "";
+    var result = escapeHtml(text);
+    ACRONYM_KEYS.forEach(function (k) {
+      var esc = k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      var re = new RegExp("\\b" + esc + "\\b", "g");
+      result = result.replace(re, '<abbr title="' + escapeHtml(ACRONYMS[k]) + '">' + k + "</abbr>");
+    });
+    return result;
+  }
+
+  function findCatalogEntry(name) {
+    var n = normalize(name);
+    for (var group in MED_CATALOG) {
+      var list = MED_CATALOG[group];
+      for (var i = 0; i < list.length; i++) {
+        if (normalize(list[i].name) === n) return list[i];
+      }
+    }
+    return null;
+  }
+
+  function levenshtein(a, b) {
+    var m = a.length, n = b.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+    var d = [];
+    for (var i = 0; i <= m; i++) d.push([i]);
+    for (var j = 0; j <= n; j++) d[0][j] = j;
+    for (i = 1; i <= m; i++) {
+      for (j = 1; j <= n; j++) {
+        var cost = a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1;
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      }
+    }
+    return d[m][n];
+  }
+
+  function similarity(a, b) {
+    var na = normalize(a), nb = normalize(b);
+    var maxLen = Math.max(na.length, nb.length) || 1;
+    return 1 - levenshtein(na, nb) / maxLen;
+  }
+
+  function levelFromScore(score) {
+    if (score > 60) return "high";
+    if (score > 30) return "medium";
+    return "low";
+  }
+
+  function levelLabel(level) {
+    return { low: "Bajo", medium: "Medio", high: "Alto" }[level] || "Bajo";
+  }
+
+  function toast(msg) {
+    var el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.classList.remove("show"); }, 2200);
+  }
+
+  /* ---------------------------------------------------------------------
+   * 3. MOTOR DE ANÁLISIS DE RIESGO
+   * ------------------------------------------------------------------- */
+
+  function analyzePatient(patient) {
+    var meds = patient.meds.map(function (m) {
+      var entry = findCatalogEntry(m.name);
+      return {
+        name: m.name, dosage: m.dosage, freq: m.freq, route: m.route, indication: m.indication,
+        cls: entry ? entry.cls : null
+      };
+    });
+
+    var interactions = [];
+    var seenPairs = {};
+
+    function addInteraction(m1, m2, rule) {
+      var key = normalize(m1.name) + "|" + normalize(m2.name);
+      if (seenPairs[key]) return;
+      seenPairs[key] = true;
+      interactions.push({
+        med1: m1.name, med2: m2.name, severity: rule.severity,
+        mechanism: rule.mechanism, description: rule.description, recommendation: rule.recommendation,
+        src: rule.src || GENERAL_SRC
+      });
+    }
+
+    for (var i = 0; i < meds.length; i++) {
+      for (var j = i + 1; j < meds.length; j++) {
+        var m1 = meds[i], m2 = meds[j];
+        var n1 = normalize(m1.name), n2 = normalize(m2.name);
+
+        for (var r = 0; r < NAME_PAIR_RULES.length; r++) {
+          var nr = NAME_PAIR_RULES[r];
+          var ra = normalize(nr.a), rb = normalize(nr.b);
+          if ((n1 === ra && n2 === rb) || (n1 === rb && n2 === ra)) addInteraction(m1, m2, nr);
+        }
+
+        if (m1.cls && m2.cls) {
+          for (var c = 0; c < CLASS_PAIR_RULES.length; c++) {
+            var cr = CLASS_PAIR_RULES[c];
+            var m1InA = cr.a.indexOf(m1.cls) !== -1, m2InB = cr.b.indexOf(m2.cls) !== -1;
+            var m1InB = cr.b.indexOf(m1.cls) !== -1, m2InA = cr.a.indexOf(m2.cls) !== -1;
+            if ((m1InA && m2InB) || (m1InB && m2InA)) addInteraction(m1, m2, cr);
+          }
+        }
+      }
+    }
+
+    // Regla especial: "triple whammy" renal (IECA/ARA II + Diurético + AINE)
+    var hasRAAS = meds.some(function (m) { return m.cls === "IECA" || m.cls === "ARAII"; });
+    var diureticMed = meds.filter(function (m) { return m.cls === "Diuretico_Tiazidico" || m.cls === "Diuretico_Asa"; })[0];
+    var aineMed = meds.filter(function (m) { return m.cls === "AINE"; })[0];
+    var raasMed = meds.filter(function (m) { return m.cls === "IECA" || m.cls === "ARAII"; })[0];
+    if (hasRAAS && diureticMed && aineMed) {
+      interactions.push({
+        med1: raasMed.name + " + " + diureticMed.name, med2: aineMed.name, severity: "grave",
+        mechanism: '"Triple whammy": hipoperfusión renal por bloqueo simultáneo del eje RAAS, depleción de volumen y prostaglandinas',
+        description: "La combinación de un IECA/ARA II, un diurético y un AINE incrementa marcadamente el riesgo de lesión renal aguda.",
+        recommendation: "Evitar la triple combinación, en especial en pacientes con ERC, deshidratación o edad avanzada.",
+        src: GENERAL_SRC
+      });
+    }
+
+    // LASA: tabla curada + detección algorítmica por similitud de cadenas
+    var lasa = [];
+    var seenLasa = {};
+    for (i = 0; i < meds.length; i++) {
+      for (j = i + 1; j < meds.length; j++) {
+        var med1 = meds[i], med2 = meds[j];
+        var key2 = normalize(med1.name) + "|" + normalize(med2.name);
+        if (seenLasa[key2]) continue;
+        var matched = null;
+        for (var k = 0; k < LASA_PAIRS.length; k++) {
+          var lp = LASA_PAIRS[k];
+          if ((normalize(lp.a) === normalize(med1.name) && normalize(lp.b) === normalize(med2.name)) ||
+              (normalize(lp.b) === normalize(med1.name) && normalize(lp.a) === normalize(med2.name))) {
+            matched = lp; break;
+          }
+        }
+        if (matched) {
+          var scoreMap = { Alto: 82, Medio: 58, Bajo: 28 };
+          lasa.push({
+            med1: med1.name, med2: med2.name, type: matched.type,
+            score: scoreMap[matched.risk], level: matched.risk === "Alto" ? "high" : matched.risk === "Medio" ? "medium" : "low",
+            source: "curada", src: matched.src || "ISMP 2023"
+          });
+          seenLasa[key2] = true;
+        } else {
+          var sim = similarity(med1.name, med2.name);
+          if (sim >= 0.72) {
+            var score = Math.round(sim * 100);
+            lasa.push({
+              med1: med1.name, med2: med2.name, type: "Ortográfica (algorítmica, Levenshtein)",
+              score: score, level: levelFromScore(score), source: "algoritmo",
+              src: "Similitud de cadenas — no listado por ISMP, verificar manualmente"
+            });
+            seenLasa[key2] = true;
+          }
+        }
+      }
+    }
+
+    // Adherencia
+    var nMeds = meds.length;
+    var medsPts = nMeds <= 2 ? 0 : nMeds <= 5 ? 10 : nMeds <= 8 ? 20 : 30;
+
+    var freqPoints = meds.map(function (m) {
+      var f = FREQUENCIES.filter(function (x) { return x.v === m.freq; })[0];
+      return f ? f.pts : 0;
+    });
+    var complexityPts = freqPoints.length ? Math.max.apply(null, freqPoints) : 0;
+    var distinctFreqs = {};
+    meds.forEach(function (m) { distinctFreqs[m.freq] = true; });
+    if (Object.keys(distinctFreqs).length >= 3) complexityPts = Math.min(20, complexityPts + 5);
+
+    var patientPts = 0;
+    if ((patient.age || 0) > 75) patientPts += 5;
+    if (patient.cognitiveImpairment) patientPts += 10;
+    if (patient.conditions.indexOf("Depresion") !== -1) patientPts += 8;
+    if (patient.lowEducation) patientPts += 5;
+    if (patient.lowSocialSupport) patientPts += 7;
+
+    var adherenceScore = Math.min(100, medsPts + complexityPts + patientPts);
+    var adherenceFactors = [];
+    if (nMeds > 2) adherenceFactors.push(nMeds + " medicamentos activos en el régimen");
+    if (complexityPts >= 10) adherenceFactors.push("Régimen posológico complejo o con horarios irregulares");
+    if ((patient.age || 0) > 75) adherenceFactors.push("Edad avanzada (>75 años)");
+    if (patient.cognitiveImpairment) adherenceFactors.push("Deterioro cognitivo leve");
+    if (patient.conditions.indexOf("Depresion") !== -1) adherenceFactors.push("Depresión/ansiedad no controlada");
+    if (patient.lowEducation) adherenceFactors.push("Bajo nivel educativo");
+    if (patient.lowSocialSupport) adherenceFactors.push("Falta de apoyo social o familiar");
+
+    var adherenceRecs = [];
+    if (adherenceScore > 60) {
+      adherenceRecs.push("Revisión farmacéutica urgente y considerar desprescripción de fármacos no esenciales.");
+      adherenceRecs.push("Intervención educativa intensiva y monitoreo frecuente del cumplimiento.");
+    } else if (adherenceScore > 30) {
+      adherenceRecs.push("Simplificar el régimen farmacológico cuando sea clínicamente posible.");
+      adherenceRecs.push("Usar pastillero organizador o recordatorios de dosis.");
+    } else {
+      adherenceRecs.push("Mantener seguimiento habitual; refuerzo educativo básico sobre la importancia de la adherencia.");
+    }
+
+    // Puntuaciones agregadas e imagen global (sección 8.3 del modelo clínico)
+    var graveCount = interactions.filter(function (x) { return x.severity === "grave"; }).length;
+    var moderadaCount = interactions.filter(function (x) { return x.severity === "moderada"; }).length;
+    var leveCount = interactions.filter(function (x) { return x.severity === "leve"; }).length;
+    var interactionScore = Math.min(100, graveCount * 40 + moderadaCount * 20 + leveCount * 8);
+
+    var lasaHigh = lasa.filter(function (x) { return x.level === "high"; }).length;
+    var lasaMedium = lasa.filter(function (x) { return x.level === "medium"; }).length;
+    var lasaLow = lasa.filter(function (x) { return x.level === "low"; }).length;
+    var lasaScore = Math.min(100, lasaHigh * 35 + lasaMedium * 15 + lasaLow * 5);
+
+    var overallScore, overallOverride = false;
+    if (graveCount > 0) {
+      overallScore = 100; overallOverride = true;
+    } else {
+      overallScore = Math.round(0.4 * interactionScore + 0.35 * adherenceScore + 0.25 * lasaScore);
+    }
+
+    return {
+      meds: meds,
+      interactions: interactions.sort(function (a, b) { return sevRank(b.severity) - sevRank(a.severity); }),
+      lasa: lasa.sort(function (a, b) { return b.score - a.score; }),
+      adherence: { score: adherenceScore, level: levelFromScore(adherenceScore), factors: adherenceFactors, recommendations: adherenceRecs },
+      interactionScore: interactionScore, interactionLevel: levelFromScore(interactionScore),
+      lasaScore: lasaScore, lasaLevel: levelFromScore(lasaScore),
+      overallScore: overallScore, overallLevel: levelFromScore(overallScore), overallOverride: overallOverride,
+      counts: { grave: graveCount, moderada: moderadaCount, leve: leveCount, lasaHigh: lasaHigh, lasaMedium: lasaMedium, lasaLow: lasaLow }
+    };
+  }
+
+  function sevRank(s) { return s === "grave" ? 3 : s === "moderada" ? 2 : 1; }
+
+  /* ---------------------------------------------------------------------
+   * 4. ESTADO Y RENDER
+   * ------------------------------------------------------------------- */
+
+  var state = {
+    view: "home",
+    patient: null,
+    analysis: null,
+    detailTab: "interactions",
+    draftMeds: [],
+    medDraft: { name: "", dosage: "", freq: "1x", route: "oral", indication: "" },
+    cumQuery: "",
+    cumResults: []
+  };
+
+  function setView(v) { state.view = v; window.scrollTo({ top: 0, behavior: "auto" }); render(); }
+
+  function loadPersona(id) {
+    var p = PERSONAS.filter(function (x) { return x.id === id; })[0];
+    if (!p) return;
+    state.patient = {
+      name: p.name, age: p.age, gender: p.gender, imc: p.imc, conditions: p.conditions.slice(),
+      cognitiveImpairment: p.cognitiveImpairment, lowSocialSupport: p.lowSocialSupport, lowEducation: p.lowEducation,
+      meds: p.meds.slice()
+    };
+    state.analysis = analyzePatient(state.patient);
+    state.detailTab = "interactions";
+    setView("results");
+  }
+
+  function startBlank() {
+    state.draftMeds = [];
+    state.medDraft = { name: "", dosage: "", freq: "1x", route: "oral", indication: "" };
+    state.formConditions = [];
+    setView("form");
+  }
+
+  function icon(name, size) {
+    size = size || 18;
+    var paths = {
+      alert: '<path d="M12 3 2 20h20L12 3Z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/><path d="M12 9v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="17" r="0.9" fill="currentColor"/>',
+      trend: '<path d="M3 17 9 11 13 15 21 6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6h6v6" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+      shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6l-8-3Z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
+      check: '<path d="M4 12.5 9 17l11-11" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+      pill: '<rect x="3" y="9" width="18" height="6" rx="3" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M12 9v6" stroke="currentColor" stroke-width="1.6"/>',
+      plus: '<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+      trash: '<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+      arrow: '<path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    };
+    return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24">' + (paths[name] || "") + "</svg>";
+  }
+
+  function pill(level) {
+    return '<span class="pill pill-' + level + '">' + levelLabel(level) + "</span>";
+  }
+
+  function stripeVar(level) {
+    return level === "high" ? "var(--risk-high)" : level === "medium" ? "var(--risk-medium)" : "var(--risk-low)";
+  }
+
+  function header() {
+    return '' +
+      '<header class="site-header"><div class="container">' +
+      '<div class="brand">PolyRisk <small>· congreso investigación · IA clínica</small></div>' +
+      '<nav class="tabs">' +
+      '<button class="' + (state.view === "home" ? "active" : "") + '" onclick="PolyRisk.setView(\'home\')">Inicio</button>' +
+      '<button class="' + (state.view === "form" ? "active" : "") + '" onclick="PolyRisk.startBlank()">Nuevo análisis</button>' +
+      '<button class="' + (state.view === "results" ? "active" : "") + '" ' + (state.analysis ? "" : "disabled") + ' onclick="PolyRisk.setView(\'results\')">Resultados</button>' +
+      "</nav></div></header>";
+  }
+
+  function footer() {
+    var cumNote = (typeof CUM_CATALOG !== "undefined")
+      ? '<p style="margin-top:8px;">Catálogo de principios activos (' + CUM_CATALOG.length + ') extraído del <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">Código Único de Medicamentos (CUM) — INVIMA, datos.gov.co</a>.</p>'
+      : "";
+    return '<footer class="site-footer"><div class="container"><p>PolyRisk · Herramienta de apoyo a la decisión clínica para polifarmacia en pacientes pluripatológicos. Contenido con fines educativos y de demostración para congreso de investigación — no sustituye el criterio clínico ni bases de datos regulatorias (DrugBank, Micromedex, STOPP/START). <a href="#" onclick="PolyRisk.goToReferences(); return false;">Ver referencias y evidencia</a>.</p>' + cumNote + "</div></footer>";
+  }
+
+  function renderHome() {
+    var personaCards = PERSONAS.map(function (p) {
+      var tags = p.conditions.map(function (c) {
+        var label = CONDITIONS.filter(function (x) { return x.id === c; })[0];
+        return '<span class="tag">' + withAbbr(label ? label.label : c) + "</span>";
+      }).join("");
+      return '' +
+        '<article class="persona-card">' +
+        '<div class="persona-head"><div class="persona-avatar">' + p.initials + '</div>' +
+        '<div><p class="persona-name">' + p.name + '</p><p class="persona-meta">' + p.summary + "</p></div></div>" +
+        '<div class="persona-tags">' + tags + "</div>" +
+        '<div class="persona-foot"><span>' + p.meds.length + " medicamentos</span>" +
+        '<button class="btn btn-ghost btn-sm" onclick="PolyRisk.loadPersona(\'' + p.id + '\')">Cargar arquetipo ' + icon("arrow", 14) + "</button></div>" +
+        "</article>";
+    }).join("");
+
+    var features = [
+      { icon: "alert", title: "Interacciones medicamentosas", body: "Motor de reglas por par de fármacos y por clase terapéutica: grave, moderada y leve, con mecanismo y recomendación clínica." },
+      { icon: "trend", title: "Riesgo de adherencia", body: "Puntuación 0–100 según número de fármacos, complejidad posológica y factores del paciente (edad, cognición, apoyo social)." },
+      { icon: "shield", title: "Confusión LASA", body: "Detección por tabla curada (ISMP) y por algoritmo de similitud de cadenas (Levenshtein) para pares no catalogados." }
+    ];
+    if (typeof CUM_CATALOG !== "undefined") {
+      features.push({ icon: "pill", title: "Catálogo oficial CUM", body: CUM_CATALOG.length + " principios activos vigentes del INVIMA (datos.gov.co) disponibles para búsqueda al registrar medicamentos." });
+    }
+    features = features.map(function (f) {
+      return '<div class="feature-card"><div class="feature-icon">' + icon(f.icon, 20) + "</div><h3>" + f.title + "</h3><p>" + f.body + "</p></div>";
+    }).join("");
+
+    return '' +
+      '<section class="hero container">' +
+      '<p class="eyebrow">Polifarmacia · Paciente crónico pluripatológico</p>' +
+      '<h1 class="display">Análisis de riesgo de polifarmacia para pacientes pluripatológicos</h1>' +
+      '<p class="lede">Carga un arquetipo persona (hipertensión, diabetes, obesidad, dislipidemia, EPOC y otras comorbilidades) o registra un paciente propio, y obtén una clasificación de riesgo de interacciones, adherencia y confusión de medicamentos.</p>' +
+      '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+      '<button class="btn btn-primary" onclick="PolyRisk.startBlank()">' + icon("pill", 16) + " Nuevo análisis</button>" +
+      '<button class="btn btn-ghost" onclick="document.getElementById(\'personas\').scrollIntoView({behavior:\'smooth\'})">Ver arquetipos</button>' +
+      "</div></section>" +
+      '<section class="container" id="personas">' +
+      '<h2 class="section-title">Arquetipos persona</h2>' +
+      '<p class="section-sub">Tres perfiles representativos de paciente crónico pluripatológico, cada uno con un patrón de riesgo distinto — interacciones graves, vulnerabilidad renal o riesgo conductual de adherencia.</p>' +
+      '<div class="persona-grid">' + personaCards + "</div></section>" +
+      '<section class="container">' +
+      '<h2 class="section-title">Qué evalúa el algoritmo</h2>' +
+      '<p class="section-sub">Motor híbrido: reglas clínicas deterministas para interacciones y LASA, puntuación ponderada explicable para adherencia y riesgo global.</p>' +
+      '<div class="feature-grid">' + features + "</div></section>" +
+      '<section class="container" id="referencias">' +
+      '<h2 class="section-title">Referencias y evidencia</h2>' +
+      '<p class="section-sub">Distinguimos dos niveles: (1) hallazgos con <b>cita verificada</b> — el par o la interacción se comprobó línea por línea contra el texto completo del documento fuente (incluye 6 reglas de interacción verificadas contra los 133 criterios STOPP y 57 START de la versión 3, y los 2 confirmados contra Beers Criteria 2023), visible como "Fuente" en cada tarjeta de resultado; y (2) el resto del motor de reglas, que refleja <b>consenso farmacológico general</b> (mecanismos y severidades ampliamente documentados en la literatura) pero no encontró un criterio numerado exacto al revisar esos mismos documentos completos. La lista de pares LASA se verificó en su totalidad contra la lista oficial de ISMP. La fórmula de riesgo de adherencia es una puntuación heurística propia inspirada en los factores que identifican OMS y NICE; no es un instrumento validado.</p>' +
+      renderReferences() +
+      "</section>";
+  }
+
+  function renderReferences() {
+    return '<div class="refs-section">' + REFERENCES.map(function (group) {
+      var items = group.items.map(function (r) {
+        return "<li>" + '<a href="' + escapeHtml(r.u) + '" target="_blank" rel="noopener">' + escapeHtml(r.t) + "</a><br/>" + escapeHtml(r.a) + "</li>";
+      }).join("");
+      return '<div class="refs-card"><h3>' + withAbbr(group.domain) + "</h3><ol>" + items + "</ol></div>";
+    }).join("") + "</div>";
+  }
+
+  function renderForm() {
+    var conditionRows = CONDITIONS.map(function (c) {
+      var checked = state.formConditions.indexOf(c.id) !== -1;
+      return '<label class="check-row ' + (checked ? "checked" : "") + '">' +
+        '<input type="checkbox" ' + (checked ? "checked" : "") + ' onchange="PolyRisk.toggleCondition(\'' + c.id + '\')"/>' +
+        "<span>" + withAbbr(c.label) + "</span></label>";
+    }).join("");
+
+    var medOptions = "";
+    Object.keys(MED_CATALOG).forEach(function (group) {
+      var conditionMatch = group === "Otros" || state.formConditions.indexOf(group) !== -1;
+      if (!conditionMatch && state.formConditions.length > 0) return;
+      MED_CATALOG[group].forEach(function (m) {
+        medOptions += '<option value="' + escapeHtml(m.name) + '">' + escapeHtml(m.name) + " — " + escapeHtml(m.dosage) + "</option>";
+      });
+    });
+
+    var freqOptions = FREQUENCIES.map(function (f) {
+      return '<option value="' + f.v + '" ' + (state.medDraft.freq === f.v ? "selected" : "") + ">" + f.label + "</option>";
+    }).join("");
+
+    var routeOptions = Object.keys(ROUTES).map(function (r) {
+      return '<option value="' + r + '" ' + (state.medDraft.route === r ? "selected" : "") + ">" + ROUTES[r] + "</option>";
+    }).join("");
+
+    var medRows = state.draftMeds.map(function (m, idx) {
+      return '<div class="med-row"><div><div class="med-name">' + escapeHtml(m.name) + '</div>' +
+        '<div class="med-detail">' + escapeHtml(m.dosage || "—") + " · " + (FREQUENCIES.filter(function (f) { return f.v === m.freq; })[0] || {}).label + " · " + ROUTES[m.route] + (m.indication ? " · " + escapeHtml(m.indication) : "") + "</div></div>" +
+        '<button class="btn btn-danger-ghost btn-sm" onclick="PolyRisk.removeDraftMed(' + idx + ')">' + icon("trash", 14) + "</button></div>";
+    }).join("") || '<p style="color:var(--text-muted);font-size:0.85rem;">Aún no has agregado medicamentos.</p>';
+
+    return '' +
+      '<section class="container" style="padding-top:40px;">' +
+      '<h2 class="section-title">Nuevo análisis de polifarmacia</h2>' +
+      '<p class="section-sub">Registra los datos del paciente y su lista de medicamentos activos.</p>' +
+      renderStepsStrip() +
+      '<div class="card"><div class="card-pad">' +
+      '<p class="subtle-title">Datos del paciente</p>' +
+      '<div class="form-grid">' +
+      '<div class="field"><label>Nombre</label><input id="f-name" placeholder="Ej. María Torres"/></div>' +
+      '<div class="field"><label>Edad</label><input id="f-age" type="number" min="0" max="120" placeholder="Ej. 68"/></div>' +
+      '<div class="field"><label>Género</label><select id="f-gender"><option value="female">Femenino</option><option value="male">Masculino</option><option value="other">Otro</option></select></div>' +
+      '<div class="field"><label>IMC (kg/m²)</label><input id="f-imc" placeholder="Ej. 27.4"/></div>' +
+      "</div>" +
+      '<p class="subtle-title" style="margin-top:20px;">Condiciones crónicas</p>' +
+      '<div class="checklist">' + conditionRows + "</div>" +
+      "</div></div>" +
+
+      '<div class="card"><div class="card-pad">' +
+      '<p class="subtle-title">Medicamentos frecuentes según las condiciones seleccionadas</p>' +
+      renderQuickPicks() +
+      '<p class="subtle-title" style="margin-top:20px;">Medicamentos seleccionados (' + state.draftMeds.length + ")</p>" +
+      '<div class="med-list">' + medRows + "</div>" +
+      "</div></div>" +
+
+      '<div class="card"><div class="card-pad">' +
+      '<p class="subtle-title">Factores de riesgo de adherencia</p>' +
+      '<div class="checklist">' +
+      '<label class="check-row ' + (state.medDraft._cog ? "checked" : "") + '"><input type="checkbox" id="f-cog"/><span>Deterioro cognitivo leve</span></label>' +
+      '<label class="check-row"><input type="checkbox" id="f-edu"/><span>Bajo nivel educativo</span></label>' +
+      '<label class="check-row"><input type="checkbox" id="f-support"/><span>Falta de apoyo social o familiar</span></label>' +
+      "</div>" +
+      "</div></div>" +
+
+      '<div class="card"><div class="card-pad">' +
+      '<p class="subtle-title">Agregar otro medicamento</p>' +
+      '<p style="font-size:0.82rem;color:var(--text-muted);margin:-6px 0 14px;">Para medicamentos que no aparecen en la lista rápida de arriba, o para ajustar dosis/frecuencia con precisión.</p>' +
+      '<div class="med-picker">' +
+      '<div class="field"><label>Medicamento</label><input id="m-name" list="med-suggestions" placeholder="Escribe o elige de la lista" value="' + escapeHtml(state.medDraft.name) + '"/>' +
+      '<datalist id="med-suggestions">' + medOptions + "</datalist></div>" +
+      '<div class="field"><label>Dosis</label><input id="m-dosage" placeholder="Ej. 50 mg" value="' + escapeHtml(state.medDraft.dosage) + '"/></div>' +
+      '<div class="field"><label>Frecuencia</label><select id="m-freq">' + freqOptions + "</select></div>" +
+      '<div class="field"><label>Vía</label><select id="m-route">' + routeOptions + "</select></div>" +
+      "</div>" +
+      '<div class="form-grid" style="margin-top:12px;">' +
+      '<div class="field"><label>Indicación</label><input id="m-indication" placeholder="Ej. HTA" value="' + escapeHtml(state.medDraft.indication) + '"/></div>' +
+      "</div>" +
+      '<div style="margin-top:14px;"><button class="btn btn-primary btn-sm" onclick="PolyRisk.addDraftMed()">' + icon("plus", 14) + " Agregar medicamento</button></div>" +
+      renderCumBox() +
+      "</div></div>" +
+
+      '<div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px;">' +
+      '<button class="btn btn-ghost" onclick="PolyRisk.setView(\'home\')">Cancelar</button>' +
+      '<button class="btn btn-primary" onclick="PolyRisk.runAnalysis()">Analizar riesgos ' + icon("arrow", 16) + "</button>" +
+      "</div>" +
+      "</section>";
+  }
+
+  function searchCum(query) {
+    if (typeof CUM_CATALOG === "undefined" || !query || query.trim().length < 2) return [];
+    var q = normalize(query.trim());
+    var starts = [], includes = [];
+    for (var i = 0; i < CUM_CATALOG.length; i++) {
+      var entry = CUM_CATALOG[i];
+      var n = normalize(entry.n);
+      if (n.indexOf(q) === 0) starts.push(entry);
+      else if (n.indexOf(q) !== -1) includes.push(entry);
+      if (starts.length >= 25) break;
+    }
+    return starts.concat(includes).slice(0, 25);
+  }
+
+  function renderStepsStrip() {
+    var steps = [
+      "Elige un arquetipo o crea un paciente nuevo",
+      "Marca condiciones crónicas — se listan los medicamentos más frecuentes",
+      "Selecciona los medicamentos con un clic (dosis habitual precargada)",
+      "Analiza y revisa el riesgo con la evidencia citada"
+    ];
+    return '<div class="steps-strip">' + steps.map(function (s, i) {
+      return '<div class="step-item"><span class="step-num">' + (i + 1) + "</span><span>" + s + "</span></div>";
+    }).join("") + "</div>";
+  }
+
+  function isMedInDraft(name) {
+    var n = normalize(name);
+    return state.draftMeds.some(function (m) { return normalize(m.name) === n; });
+  }
+
+  function renderQuickPicks() {
+    if (!state.formConditions || state.formConditions.length === 0) {
+      return '<p class="quick-pick-hint">Selecciona una o más condiciones crónicas arriba para ver aquí sus medicamentos más frecuentes, con dosis habitual lista para agregar con un clic.</p>';
+    }
+    return state.formConditions.map(function (condId) {
+      var meds = MED_CATALOG[condId] || [];
+      if (meds.length === 0) return "";
+      var byClass = {};
+      var order = [];
+      meds.forEach(function (m) {
+        if (!byClass[m.cls]) { byClass[m.cls] = []; order.push(m.cls); }
+        byClass[m.cls].push(m);
+      });
+      var condLabel = CONDITIONS.filter(function (c) { return c.id === condId; })[0];
+      var classBlocks = order.map(function (cls) {
+        var rows = byClass[cls].map(function (m) {
+          var checked = isMedInDraft(m.name);
+          var freqLabel = (FREQUENCIES.filter(function (f) { return f.v === m.freq; })[0] || {}).label || "";
+          return '<label class="quick-row ' + (checked ? "checked" : "") + '">' +
+            '<input type="checkbox" ' + (checked ? "checked" : "") + ' onchange="PolyRisk.toggleQuickMed(\'' + condId + "', '" + m.name.replace(/'/g, "\\'") + '\')"/>' +
+            "<span>" + escapeHtml(m.name) + '</span><span class="quick-dose">' + escapeHtml(m.dosage) + (freqLabel ? " · " + freqLabel : "") + "</span>" +
+            "</label>";
+        }).join("");
+        return '<div class="quick-class-title">' + withAbbr(CLASS_LABELS[cls] || cls) + '</div><div class="quick-rows">' + rows + "</div>";
+      }).join("");
+      return '<div class="quick-group"><div class="quick-group-title">' + withAbbr(condLabel ? condLabel.label : condId) + "</div>" + classBlocks + "</div>";
+    }).join("");
+  }
+
+  function renderCumBox() {
+    if (typeof CUM_CATALOG === "undefined") return "";
+    var query = state.cumQuery || "";
+    state.cumResults = searchCum(query);
+    var resultsHtml = state.cumResults.map(function (r, idx) {
+      return '<div class="cum-item"><div><div class="cum-item-name">' + escapeHtml(r.n) + '</div>' +
+        '<div class="cum-item-meta">' + escapeHtml(r.atc || "—") + " · " + escapeHtml(r.d || "") + " · " + escapeHtml(r.r || "") + "</div></div>" +
+        '<button type="button" class="btn btn-ghost btn-sm" onclick="PolyRisk.useCumEntry(' + idx + ')">Usar</button></div>';
+    }).join("");
+    var countLabel = query.trim().length < 2
+      ? '<p class="cum-count">Escribe al menos 2 caracteres para buscar.</p>'
+      : '<p class="cum-count">' + state.cumResults.length + (state.cumResults.length === 25 ? "+ " : " ") + "resultado" + (state.cumResults.length === 1 ? "" : "s") + " sobre " + CUM_CATALOG.length + " principios activos vigentes.</p>";
+    return '' +
+      '<div class="cum-box">' +
+      '<p class="subtle-title">Buscar en el catálogo oficial (CUM)</p>' +
+      '<p class="cum-source">Registros vigentes del INVIMA, vía <a href="https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" target="_blank" rel="noopener">datos.gov.co — Código Único de Medicamentos</a>.</p>' +
+      '<div class="field"><input id="cum-search" placeholder="Ej. losartán, metformina, ibuprofeno…" value="' + escapeHtml(query) + '" oninput="PolyRisk.setCumQuery(this.value)"/></div>' +
+      countLabel +
+      '<div class="cum-results">' + resultsHtml + "</div>" +
+      "</div>";
+  }
+
+  function renderResults() {
+    var a = state.analysis, p = state.patient;
+    if (!a) return '<div class="container" style="padding:60px 0;">Sin análisis disponible.</div>';
+
+    var summary = '' +
+      '<div class="summary-grid">' +
+      riskCard("Interacciones medicamentosas", a.interactionScore, a.interactionLevel, a.counts.grave + " grave · " + a.counts.moderada + " moderada · " + a.counts.leve + " leve") +
+      riskCard("Riesgo de adherencia", a.adherence.score, a.adherence.level, a.adherence.factors.length + " factores contribuyentes") +
+      riskCard("Confusión LASA", a.lasaScore, a.lasaLevel, a.counts.lasaHigh + " alto · " + a.counts.lasaMedium + " medio · " + a.counts.lasaLow + " bajo") +
+      "</div>";
+
+    var overall = '' +
+      '<div class="overall-banner" style="background:var(--risk-' + a.overallLevel + '-bg);border-color:var(--risk-' + a.overallLevel + ');">' +
+      '<div><div class="label">Riesgo global del paciente</div>' +
+      '<div class="value" style="color:var(--risk-' + a.overallLevel + ')">' + levelLabel(a.overallLevel) + " · " + a.overallScore + "/100</div>" +
+      (a.overallOverride ? '<p style="margin:6px 0 0;font-size:0.82rem;color:var(--text-muted);">Elevado automáticamente por regla de anulación: existe al menos una interacción grave.</p>' : "") +
+      "</div>" +
+      '<button class="btn btn-ghost" onclick="PolyRisk.exportReport()">Exportar / imprimir reporte</button>' +
+      "</div>";
+
+    var tabs = [
+      { id: "interactions", label: "Interacciones (" + a.interactions.length + ")" },
+      { id: "lasa", label: "LASA (" + a.lasa.length + ")" },
+      { id: "adherence", label: "Adherencia" },
+      { id: "recs", label: "Recomendaciones" }
+    ].map(function (t) {
+      return '<button class="' + (state.detailTab === t.id ? "active" : "") + '" onclick="PolyRisk.setDetailTab(\'' + t.id + '\')">' + t.label + "</button>";
+    }).join("");
+
+    var interactionsBody = a.interactions.length ? a.interactions.map(function (x) {
+      return '<div class="finding" style="--stripe:' + stripeVar(x.severity === "grave" ? "high" : x.severity === "moderada" ? "medium" : "low") + ';">' +
+        '<div class="finding-head"><span class="finding-pair">' + escapeHtml(x.med1) + " + " + escapeHtml(x.med2) + "</span>" +
+        pill(x.severity === "grave" ? "high" : x.severity === "moderada" ? "medium" : "low") + "</div>" +
+        '<p class="finding-mech">' + withAbbr(x.mechanism) + "</p>" +
+        "<p>" + withAbbr(x.description) + "</p>" +
+        '<div class="finding-reco"><b>Recomendación:</b> ' + withAbbr(x.recommendation) + "</div>" +
+        '<p style="margin:8px 0 0;font-size:0.74rem;color:var(--text-muted);">Fuente: ' + escapeHtml(x.src || "sin verificar") + "</p></div>";
+    }).join("") : emptyState("No se detectaron interacciones medicamentosas relevantes.");
+
+    var lasaBody = a.lasa.length ? a.lasa.map(function (x) {
+      return '<div class="finding" style="--stripe:' + stripeVar(x.level) + ';">' +
+        '<div class="finding-head"><span class="finding-pair">' + escapeHtml(x.med1) + " ↔ " + escapeHtml(x.med2) + "</span>" + pill(x.level) + "</div>" +
+        '<p class="finding-mech">Similitud ' + escapeHtml(x.type) + " · puntuación " + x.score + "/100 · fuente: " + escapeHtml(x.src || "sin verificar") + "</p>" +
+        '<div class="finding-reco"><b>Medida de seguridad:</b> Usar nombres genéricos en la prescripción; almacenar y etiquetar por separado; alertar en dispensación.</div></div>';
+    }).join("") : emptyState("No se detectaron pares de medicamentos con riesgo de confusión (LASA).");
+
+    var adherenceBody = '<div class="card card-pad">' +
+      '<p class="subtle-title">Factores contribuyentes</p>' +
+      (a.adherence.factors.length ? a.adherence.factors.map(function (f) {
+        return '<div class="rec-item">' + icon("alert", 16) + "<span>" + withAbbr(f) + "</span></div>";
+      }).join("") : '<p style="color:var(--text-muted);">Sin factores adicionales relevantes.</p>') +
+      '<p class="subtle-title" style="margin-top:18px;">Recomendaciones</p>' +
+      a.adherence.recommendations.map(function (r) {
+        return '<div class="rec-item">' + icon("check", 16) + "<span>" + withAbbr(r) + "</span></div>";
+      }).join("") +
+      "</div>";
+
+    var allRecs = a.adherence.recommendations.concat([
+      "Revisar la necesidad de cada medicamento y considerar deprescripción cuando corresponda.",
+      "Educar al paciente sobre la importancia de la adherencia y el reconocimiento de efectos adversos.",
+      "Monitoreo periódico de función renal/hepática y de la respuesta terapéutica.",
+      "Implementar medidas de seguridad para prevenir errores de medicación (nombres genéricos, doble verificación)."
+    ]);
+    var recsBody = '<div class="card card-pad">' + allRecs.map(function (r) {
+      return '<div class="rec-item">' + icon("check", 16) + "<span>" + withAbbr(r) + "</span></div>";
+    }).join("") + "</div>";
+
+    var panels = [
+      { id: "interactions", title: "Interacciones medicamentosas", html: interactionsBody },
+      { id: "lasa", title: "Confusión de medicamentos (LASA)", html: lasaBody },
+      { id: "adherence", title: "Riesgo de adherencia", html: adherenceBody },
+      { id: "recs", title: "Recomendaciones", html: recsBody }
+    ];
+    var body = panels.map(function (pnl) {
+      return '<div class="tab-panel' + (state.detailTab === pnl.id ? " active" : "") + '" data-tab="' + pnl.id + '">' +
+        '<h3 class="print-only-title">' + pnl.title + "</h3>" + pnl.html + "</div>";
+    }).join("");
+
+    var medList = a.meds.map(function (m) {
+      return '<div class="med-row"><div><div class="med-name">' + escapeHtml(m.name) + '</div><div class="med-detail">' +
+        escapeHtml(m.dosage || "—") + " · " + escapeHtml(m.indication || "") + "</div></div>" +
+        '<span class="tag">' + withAbbr(CLASS_LABELS[m.cls] || "Sin clasificar") + "</span></div>";
+    }).join("");
+
+    return '' +
+      '<section class="container" style="padding-top:36px;">' +
+      '<div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:24px;">' +
+      '<div><h2 class="section-title" style="margin-bottom:2px;">Resultados — ' + escapeHtml(p.name || "Paciente") + "</h2>" +
+      '<p class="section-sub" style="margin:0;">' + (p.age ? p.age + " años · " : "") + p.conditions.length + " condiciones crónicas · " + a.meds.length + " medicamentos</p></div>" +
+      '<div style="display:flex;gap:8px;">' +
+      '<button class="btn btn-ghost btn-sm" onclick="PolyRisk.goToReferences()">Metodología y referencias</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="PolyRisk.startBlank()">Nuevo análisis</button>' +
+      "</div>" +
+      "</div>" +
+      summary + overall +
+      '<div class="card card-pad" style="margin-bottom:24px;"><p class="subtle-title">Medicamentos analizados</p><div class="med-list">' + medList + "</div></div>" +
+      '<div class="detail-tabs">' + tabs + "</div>" +
+      body +
+      "</section>";
+  }
+
+  function riskCard(title, score, level, sub) {
+    return '' +
+      '<div class="risk-card" style="--stripe:' + stripeVar(level) + ';">' +
+      "<h4>" + title + "</h4>" +
+      '<div class="risk-score">' + score + '<span style="font-size:1rem;color:var(--text-muted);"> /100</span></div>' +
+      '<div class="meter"><span style="width:' + score + "%;background:" + stripeVar(level) + ';"></span></div>' +
+      pill(level) + '<p style="margin:10px 0 0;font-size:0.8rem;color:var(--text-muted);">' + sub + "</p>" +
+      "</div>";
+  }
+
+  function emptyState(msg) {
+    return '<div class="empty-state">' + icon("check", 18) + "<span>" + msg + "</span></div>";
+  }
+
+  function render() {
+    var html = header();
+    if (state.view === "home") html += renderHome();
+    else if (state.view === "form") html += renderForm();
+    else if (state.view === "results") html += renderResults();
+    html += footer();
+    document.getElementById("app").innerHTML = html;
+  }
+
+  /* ---------------------------------------------------------------------
+   * 5. ACCIONES
+   * ------------------------------------------------------------------- */
+
+  function toggleCondition(id) {
+    if (!state.formConditions) state.formConditions = [];
+    var idx = state.formConditions.indexOf(id);
+    if (idx === -1) state.formConditions.push(id); else state.formConditions.splice(idx, 1);
+    render();
+  }
+
+  function toggleQuickMed(condId, medName) {
+    var n = normalize(medName);
+    var existingIdx = -1;
+    for (var i = 0; i < state.draftMeds.length; i++) {
+      if (normalize(state.draftMeds[i].name) === n) { existingIdx = i; break; }
+    }
+    if (existingIdx !== -1) {
+      state.draftMeds.splice(existingIdx, 1);
+    } else {
+      var entry = (MED_CATALOG[condId] || []).filter(function (m) { return normalize(m.name) === n; })[0];
+      if (!entry) return;
+      var condLabel = CONDITIONS.filter(function (c) { return c.id === condId; })[0];
+      state.draftMeds.push({
+        name: entry.name, dosage: entry.dosage, freq: entry.freq || "1x",
+        route: entry.route || "oral", indication: condLabel ? condLabel.label : condId
+      });
+    }
+    render();
+  }
+
+  function addDraftMed() {
+    var name = document.getElementById("m-name").value.trim();
+    if (!name) { toast("Ingresa el nombre del medicamento"); return; }
+    state.draftMeds.push({
+      name: name,
+      dosage: document.getElementById("m-dosage").value.trim(),
+      freq: document.getElementById("m-freq").value,
+      route: document.getElementById("m-route").value,
+      indication: document.getElementById("m-indication").value.trim()
+    });
+    state.medDraft = { name: "", dosage: "", freq: "1x", route: "oral", indication: "" };
+    render();
+    toast("Medicamento agregado");
+  }
+
+  function removeDraftMed(idx) {
+    state.draftMeds.splice(idx, 1);
+    render();
+  }
+
+  function runAnalysis() {
+    var name = document.getElementById("f-name").value.trim() || "Paciente sin nombre";
+    if (state.draftMeds.length === 0) { toast("Agrega al menos un medicamento"); return; }
+    if (!state.formConditions || state.formConditions.length === 0) { toast("Selecciona al menos una condición crónica"); return; }
+
+    state.patient = {
+      name: name,
+      age: parseInt(document.getElementById("f-age").value, 10) || null,
+      gender: document.getElementById("f-gender").value,
+      imc: document.getElementById("f-imc").value.trim(),
+      conditions: state.formConditions.slice(),
+      cognitiveImpairment: document.getElementById("f-cog").checked,
+      lowEducation: document.getElementById("f-edu").checked,
+      lowSocialSupport: document.getElementById("f-support").checked,
+      meds: state.draftMeds.slice()
+    };
+    state.analysis = analyzePatient(state.patient);
+    state.detailTab = "interactions";
+    setView("results");
+  }
+
+  function setDetailTab(id) { state.detailTab = id; render(); }
+
+  function goToReferences() {
+    state.view = "home";
+    render();
+    var el = document.getElementById("referencias");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function exportReport() {
+    try {
+      if (typeof window.print !== "function") throw new Error("print no disponible");
+      window.print();
+    } catch (e) {
+      toast("Tu navegador bloqueó la impresión aquí. Abre la app en una pestaña normal (no dentro de una vista incrustada) e intenta de nuevo, o usa Ctrl/Cmd+P.");
+    }
+  }
+
+  function setCumQuery(value) {
+    state.cumQuery = value;
+    render();
+    var input = document.getElementById("cum-search");
+    if (input) {
+      input.focus();
+      var pos = input.value.length;
+      input.setSelectionRange(pos, pos);
+    }
+  }
+
+  function useCumEntry(idx) {
+    var entry = (state.cumResults || [])[idx];
+    if (!entry) return;
+    document.getElementById("m-name").value = entry.n;
+    document.getElementById("m-indication").value = entry.d || "";
+    var routes = (entry.r || "").split("|");
+    var routeSelect = document.getElementById("m-route");
+    if (routes.indexOf("INHALATORIA") !== -1 || routes.indexOf("INHALADA") !== -1) routeSelect.value = "inhalation";
+    else if (routes.indexOf("TOPICA") !== -1 || routes.indexOf("TÓPICA") !== -1) routeSelect.value = "topical";
+    else if (routes.indexOf("ORAL") !== -1) routeSelect.value = "oral";
+    document.getElementById("m-name").focus();
+    toast("Datos cargados desde el catálogo CUM");
+  }
+
+  window.PolyRisk = {
+    setView: setView, loadPersona: loadPersona, startBlank: startBlank,
+    toggleCondition: toggleCondition, toggleQuickMed: toggleQuickMed, addDraftMed: addDraftMed, removeDraftMed: removeDraftMed,
+    runAnalysis: runAnalysis, setDetailTab: setDetailTab, setCumQuery: setCumQuery, useCumEntry: useCumEntry,
+    goToReferences: goToReferences, exportReport: exportReport
+  };
+
+  state.formConditions = [];
+  render();
+})();
+</script>
+
+</body>
+</html>

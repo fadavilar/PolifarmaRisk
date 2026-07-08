@@ -1,0 +1,15 @@
+{
+  "name": "PolyRisk — Análisis de Polifarmacia",
+  "short_name": "PolyRisk",
+  "description": "Analizador de riesgos de polifarmacia (interacciones, adherencia, LASA) para pacientes crónicos pluripatológicos.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F2F5F4",
+  "theme_color": "#0F6E6A",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
