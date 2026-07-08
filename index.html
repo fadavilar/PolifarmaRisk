@@ -416,6 +416,10 @@
   // el 2026-07-07) ni de AGS Beers Criteria 2023. Distinto de las reglas con cita específica abajo.
   var GENERAL_SRC = "Farmacología general — revisado contra STOPP/START v3 completo, sin coincidencia exacta";
   var STOPP3 = "STOPP/START v3 (Delgado-Silveira et al. 2023, Rev Esp Geriatr Gerontol 58:101407) — criterio ";
+  // OMS/OPS: documento sobre TMG (trastornos mentales severos), no sobre el paciente pluripatológico general.
+  // Se reutilizan solo hallazgos de interacción fármaco-fármaco (propiedad química del medicamento, no del
+  // diagnóstico psiquiátrico que lo motivó) que involucran fármacos ya presentes en nuestro catálogo.
+  var WHO_TMG = "OMS/OPS 2018/2020 — Directrices para el manejo de problemas de salud física en adultos con TMG, Anexo 6 (motor Lexi-Interact) — verificado, aplicado por propiedad farmacocinética del fármaco, no por el contexto de TMG del documento original";
 
   var NAME_PAIR_RULES = [
     { a: "Enalapril", b: "Metformina", severity: "grave", mechanism: "Potenciación del efecto hipoglucemiante",
@@ -487,7 +491,27 @@
       recommendation: "Vigilar signos de sangrado; considerar gastroprotección.", src: GENERAL_SRC },
     { a: ["BCC_DHP"], b: ["Estatina"], severity: "leve", mechanism: "Inhibición leve de CYP3A4",
       description: "Aumento leve de los niveles séricos de la estatina.",
-      recommendation: "Monitorear la aparición de efectos adversos musculares.", src: GENERAL_SRC }
+      recommendation: "Monitorear la aparición de efectos adversos musculares.", src: GENERAL_SRC },
+    { a: ["ISRS"], b: ["Biguanida"], severity: "moderada", mechanism: "Potenciación del efecto hipoglucemiante",
+      description: "Los ISRS (documentado con fluoxetina) pueden aumentar la potencia de la metformina, con riesgo de hipoglucemia.",
+      recommendation: "Vigilar el control glucémico y ajustar la dosis de metformina, especialmente al iniciar o suspender el ISRS.",
+      src: WHO_TMG },
+    { a: ["ISRS"], b: ["Antiagregante"], severity: "grave", mechanism: "Efecto antiagregante aditivo (y, con clopidogrel, inhibición de CYP2C19)",
+      description: "Mayor riesgo de sangrado; con clopidogrel específicamente, los ISRS (documentado con fluoxetina) reducen el metabolito activo por inhibición de CYP2C19, disminuyendo su efecto antiagregante.",
+      recommendation: "Vigilar signos de sangrado; si es clopidogrel, considerar un ISRS con menor inhibición de CYP2C19 (p. ej. sertralina) o un antiagregante alternativo.",
+      src: WHO_TMG },
+    { a: ["Diuretico_Tiazidico"], b: ["ISRS"], severity: "moderada", mechanism: "Riesgo aditivo de hiponatremia",
+      description: "Documentado con fluoxetina; aumenta el riesgo de hiponatremia, especialmente en adultos mayores.",
+      recommendation: "Vigilar sodio sérico, en particular en las primeras semanas de tratamiento combinado.",
+      src: WHO_TMG },
+    { a: ["Benzodiacepina"], b: ["BCC_NoDHP"], severity: "moderada", mechanism: "Inhibición de CYP3A4",
+      description: "Documentado con diazepam y verapamilo; aumento de los niveles séricos de la benzodiacepina.",
+      recommendation: "Vigilar sedación excesiva; considerar reducir la dosis de benzodiacepina.",
+      src: WHO_TMG },
+    { a: ["ISRS"], b: ["BB_Cardio"], severity: "moderada", mechanism: "Inhibición de CYP2D6",
+      description: "Documentado con fluoxetina; aumenta los niveles séricos del betabloqueante (más marcado con metoprolol), con riesgo de bradicardia o hipotensión.",
+      recommendation: "Vigilar frecuencia cardíaca y presión arterial; considerar un ISRS con menor inhibición de CYP2D6 (p. ej. sertralina, escitalopram).",
+      src: WHO_TMG }
   ];
 
   // Cada par verificado línea por línea contra ISMP List of Confused Drug Names
@@ -563,6 +587,7 @@
       items: [
         { t: "Versión en español de los criterios STOPP/START 3", a: "Delgado-Silveira et al., Rev Esp Geriatr Gerontol 2023;58:101407 — cita verificada: texto completo revisado el 2026-07-07; fundamenta 6 reglas (AINE+anticoagulante, ISRS+anticoagulante, betabloqueante+verapamilo/diltiazem, antagonista mineralocorticoide+IECA/ARA-II, dabigatrán+verapamilo/diltiazem, betabloqueante no selectivo+sulfonilurea)", u: "https://doi.org/10.1016/j.regg.2023.101407" },
         { t: "American Geriatrics Society 2023 Updated AGS Beers Criteria® for Potentially Inappropriate Medication Use in Older Adults", a: "J Am Geriatr Soc, 2023 — cita verificada: fundamenta la regla de benzodiacepina+opioide y corrobora ISRS+anticoagulante", u: "https://agsjournals.onlinelibrary.wiley.com/doi/10.1111/jgs.18372" },
+        { t: "Manejo de los problemas de la salud física en adultos con trastornos mentales severos: Directrices de la OMS (Anexo 6 — interacciones medicamentosas)", a: "OMS/OPS, 2018/2020 — cita verificada: documento sobre trastornos mentales severos, no sobre el paciente pluripatológico general; se reutilizan solo 5 hallazgos de interacción fármaco-fármaco (ISRS+metformina, ISRS+antiagregante, diurético tiazídico+ISRS, benzodiacepina+verapamilo/diltiazem, ISRS+betabloqueante cardioselectivo) por ser propiedades farmacocinéticas del medicamento, no del diagnóstico psiquiátrico", u: "https://www.who.int/mental_health/evidence/guidelines_physical_health_and_severe_mental_disorders/en/" },
         { t: "Drug Interactions — StatPearls (actualizado periódicamente)", a: "NCBI Bookshelf, National Library of Medicine — lectura de referencia general para el resto de reglas, no verificada regla por regla", u: "https://www.ncbi.nlm.nih.gov/books/NBK583428/" }
       ]
     },
