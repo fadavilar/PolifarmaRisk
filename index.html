@@ -575,7 +575,23 @@
     { a: "Metformina", b: "Metronidazol", type: "Fonética/Ortográfica", risk: "Alto", src: "ISMP 2023" },
     { a: "Dabigatrán", b: "Vigabatrina", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
     { a: "Prednisona", b: "Prednisolona", type: "Ortográfica", risk: "Medio", src: "ISMP 2023" },
-    { a: "Cefadroxilo", b: "Cefalexina", type: "Fonética", risk: "Medio", src: "Ortiz Isaza, U. de Antioquia 2026 (hallazgo de campo, droguería Medellín)" }
+    { a: "Cefadroxilo", b: "Cefalexina", type: "Fonética", risk: "Medio", src: "Ortiz Isaza, U. de Antioquia 2026 (hallazgo de campo, droguería Medellín)" },
+    // Ampliación 2026-07-08: pares extraídos de OMS, "Medication safety for look-alike,
+    // sound-alike medicines" (Ginebra, 2023, ISBN 978-92-4-005889-7). Cada src indica si el
+    // par se verificó presente en el catálogo CUM colombiano depurado (11.299 registros) o si
+    // se incluye como referencia internacional sin confirmar en el subconjunto vigente/activo
+    // filtrado de INVIMA — ausencia en CUM no implica que el medicamento no exista en Colombia,
+    // solo que no aparece en los registros vigentes/activos de la fuente usada por esta app.
+    { a: "Propranolol", b: "Prednisolona", type: "Fonética/Ortográfica", risk: "Alto", src: "OMS 2023 (caso clínico documentado: propranolol dispensado en vez de prednisolona causó exacerbación de asma) · ambos verificados en catálogo CUM" },
+    { a: "Carbamazepina", b: "Carbimazol", type: "Ortográfica", risk: "Alto", src: "OMS 2023 (caso clínico documentado: carbimazol dispensado en vez de carbamazepina causó hipotiroidismo y pérdida de control de crisis) · Carbamazepina verificada en CUM; Carbimazol no encontrado en Colombia, donde se usa Metimazol/Tiamazol para la misma indicación" },
+    { a: "Daunorubicina", b: "Doxorubicina", type: "Ortográfica", risk: "Alto", src: "OMS 2023, Tabla 5 (tall man lettering recomendado por FDA/ISMP) · ambos verificados en catálogo CUM" },
+    { a: "Hidralazina", b: "Hidroxizina", type: "Fonética/Ortográfica", risk: "Medio", src: "OMS 2023, Tabla 5 (tall man lettering recomendado por FDA/ISMP) · Hidroxizina verificada en CUM; Hidralazina no encontrada en el subconjunto vigente/activo" },
+    { a: "Bupropion", b: "Buspirona", type: "Ortográfica", risk: "Medio", src: "OMS 2023, Tabla 5 (tall man lettering recomendado por FDA/ISMP) · Bupropion verificado en CUM; Buspirona no encontrada en el catálogo" },
+    { a: "Ciclosporina", b: "Cicloserina", type: "Ortográfica", risk: "Alto", src: "OMS 2023, Tabla 5 (tall man lettering recomendado por FDA/ISMP) · Ciclosporina verificada en CUM; Cicloserina no encontrada en el catálogo" },
+    { a: "Metilprednisolona", b: "Metiltestosterona", type: "Ortográfica", risk: "Medio", src: "OMS 2023, Tabla 5 (tall man lettering recomendado por FDA/ISMP) · Metilprednisolona verificada en CUM; Metiltestosterona no encontrada en el catálogo" },
+    { a: "Acetazolamida", b: "Acetohexamida", type: "Ortográfica", risk: "Bajo", src: "OMS 2023, Tabla 5 (tall man lettering recomendado por FDA/ISMP) · Acetazolamida verificada en CUM; Acetohexamida (sulfonilurea de 1.ª generación) no encontrada, probablemente descontinuada" },
+    { a: "Lantus", b: "Lanvis", type: "Fonética/Ortográfica (nombres comerciales)", risk: "Alto", src: "OMS 2023 (ejemplo documentado en Suecia: insulina glargina vs. tioguanina, un antineoplásico) · ambas marcas verificadas en el catálogo CUM colombiano — riesgo excepcionalmente grave por tratarse de una insulina confundida con quimioterapia" },
+    { a: "Pregabalina", b: "Vigabatrina", type: "Ortográfica (fragmento compartido en medio del nombre: \"gaba\")", risk: "Medio", src: "OMS 2023, Tabla 2 (patrón de letras compartidas en el interior del nombre) · ambos verificados en catálogo CUM" }
   ];
 
   // Los tres arquetipos combinan HTA, DM2, obesidad, dislipidemia y (en Doña Rosa) ERC:
@@ -658,7 +674,8 @@
       items: [
         { t: "ISMP List of Confused Drug Names", a: "Institute for Safe Medication Practices, 2023 — los 10 pares base de la tabla se comprobaron uno a uno contra este documento", u: "https://www.ismp.org/system/files/resources/2023-10/ISMP_ConfusedDrugNames_2023.pdf" },
         { t: "Prevención de errores por confusión en los nombres de los medicamentos", a: "ISMP-España — lectura de referencia general", u: "https://www.ismp-espana.org/documentos/view/63" },
-        { t: "Gestión segura de medicamentos LASA: estrategias para prevenir errores de dispensación en Droguerías Aliadas", a: "Ortiz Isaza G., trabajo de grado, Tecnología en Regencia de Farmacia, Universidad de Antioquia, 2026 — Colombia no cuenta con un listado LASA oficial propio (el país regula la farmacovigilancia en general, no una lista LASA específica) y documenta en campo el par Cefadroxilo/Cefalexina por similitud fonética", u: "https://bibliotecadigital.udea.edu.co/server/api/core/bitstreams/8df279ed-6b27-4eda-82cc-9aa7b7456137/content" }
+        { t: "Gestión segura de medicamentos LASA: estrategias para prevenir errores de dispensación en Droguerías Aliadas", a: "Ortiz Isaza G., trabajo de grado, Tecnología en Regencia de Farmacia, Universidad de Antioquia, 2026 — Colombia no cuenta con un listado LASA oficial propio (el país regula la farmacovigilancia en general, no una lista LASA específica) y documenta en campo el par Cefadroxilo/Cefalexina por similitud fonética", u: "https://bibliotecadigital.udea.edu.co/server/api/core/bitstreams/8df279ed-6b27-4eda-82cc-9aa7b7456137/content" },
+        { t: "Medication safety for look-alike, sound-alike medicines", a: "Organización Mundial de la Salud, Ginebra, 2023 (ISBN 978-92-4-005889-7) — secciones 1 a 4.3 revisadas (antecedentes, ejemplos, causas y las tablas 2, 3 y 5 de las que se extrajeron los pares y el patrón posicional citados aquí); no se revisaron en detalle las secciones 4.4 en adelante, barreras/facilitadores, referencias ni el anexo. Aporta 9 pares curados nuevos (Propranolol/Prednisolona y Carbamazepina/Carbimazol con casos clínicos documentados de daño real; Daunorubicina/Doxorubicina, Hidralazina/Hidroxizina, Bupropion/Buspirona, Ciclosporina/Cicloserina, Metilprednisolona/Metiltestosterona y Acetazolamida/Acetohexamida de la Tabla 5, tall man lettering FDA/ISMP; Lantus/Lanvis, un par de nombres comerciales — insulina glargina confundida con tioguanina, un antineoplásico; y Pregabalina/Vigabatrina de la Tabla 2) y fundamenta la regla algorítmica derivada por patrón posicional (ver nota metodológica). Cada par se contrastó contra el catálogo CUM depurado de esta app; cuando un principio no se encontró en el subconjunto vigente/activo colombiano, se anota explícitamente en la tarjeta del hallazgo — la ausencia no implica que el medicamento no exista en Colombia", u: "https://iris.who.int/server/api/core/bitstreams/5a2f5a2c-e95c-45b8-ad44-f15c9351f9f1/content" }
       ]
     },
     {
@@ -777,6 +794,48 @@
     return 1 - levenshtein(na, nb) / maxLen;
   }
 
+  // Regla LASA por patrón posicional — generaliza la Tabla 2 de OMS 2023 ("Medication safety for
+  // look-alike, sound-alike medicines"), que documenta confusión por letras compartidas al INICIO
+  // (p. ej. "Am-", "Az-", "Carb-", "Pr-"), en MEDIO (p. ej. "-gaba-") o al FINAL (p. ej. "-azol") del
+  // nombre. La OMS solo da un puñado de ejemplos textuales; esta función los generaliza a una regla
+  // aplicable a cualquier par de medicamentos, con umbrales calibrados (no arbitrarios) para controlar
+  // falsos positivos: se midió la similitud de Levenshtein real de los pares que cita la propia OMS
+  // (0.25–0.73, mediana ~0.45) y se fijó el umbral de similitud mínima un poco por debajo de esa
+  // mediana. Un prefijo o sufijo compartido de solo 1 letra es demasiado débil (ruido); de ahí el
+  // mínimo de 2 (igual al de los ejemplos "Am"/"Az" de la propia OMS). Se exige además una longitud
+  // mínima de palabra (6) para evitar coincidencias triviales en nombres cortos.
+  function sharedPrefixLen(a, b) {
+    var i = 0;
+    while (i < a.length && i < b.length && a.charAt(i) === b.charAt(i)) i++;
+    return i;
+  }
+  function sharedSuffixLen(a, b) {
+    var i = 0;
+    while (i < a.length && i < b.length && a.charAt(a.length - 1 - i) === b.charAt(b.length - 1 - i)) i++;
+    return i;
+  }
+  function lasaPatternMatch(nameA, nameB) {
+    var a = normalize(nameA), b = normalize(nameB);
+    if (Math.min(a.length, b.length) < 6 || Math.abs(a.length - b.length) > 3) return null;
+    var sim = 1 - levenshtein(a, b) / (Math.max(a.length, b.length) || 1);
+    var prefix = sharedPrefixLen(a, b);
+    if (prefix >= 2 && sim >= 0.38) {
+      return { mechanism: 'comparten el inicio "' + a.substring(0, prefix).toUpperCase() + '-"', score: Math.round(sim * 60) };
+    }
+    // El umbral de similitud para sufijo es más alto que para prefijo (0.45 vs 0.38) porque los
+    // sufijos en nombres de medicamentos en español suelen ser morfemas de clase farmacológica
+    // muy comunes (p. ej. "-tina" en casi todas las estatinas y gliptinas), no un indicio real de
+    // confusión — a diferencia del inicio del nombre, que suele ser la parte distintiva. Detectado
+    // empíricamente: "Rosuvastatina"/"Sitagliptina" comparten "-tina" (4 letras) pero su similitud
+    // global es solo 0.38, muy por debajo de pares con sufijo genuinamente distintivo como
+    // "Metronidazol"/"Omeprazol" (comparten "-azol", similitud 0.50); el umbral se fijó entre ambos.
+    var suffix = sharedSuffixLen(a, b);
+    if (suffix >= 4 && sim >= 0.45) {
+      return { mechanism: 'comparten la terminación "-' + a.substring(a.length - suffix).toUpperCase() + '"', score: Math.round(sim * 60) };
+    }
+    return null;
+  }
+
   function levelFromScore(score) {
     if (score > 60) return "high";
     if (score > 30) return "medium";
@@ -869,7 +928,7 @@
       });
     }
 
-    // LASA: tabla curada + detección algorítmica por similitud de cadenas
+    // LASA: tabla curada > similitud global fuerte (algorítmica) > patrón posicional (OMS 2023, Tabla 2)
     var lasa = [];
     var seenLasa = {};
     for (i = 0; i < meds.length; i++) {
@@ -903,6 +962,16 @@
               src: "Similitud de cadenas — no listado por ISMP, verificar manualmente"
             });
             seenLasa[key2] = true;
+          } else {
+            var pat = lasaPatternMatch(med1.name, med2.name);
+            if (pat) {
+              lasa.push({
+                med1: med1.name, med2: med2.name, type: "Ortográfica (patrón posicional — " + pat.mechanism + ")",
+                score: pat.score, level: levelFromScore(pat.score), source: "patron",
+                src: "OMS 2023, Tabla 2 (metodología de letras compartidas) — par no citado específicamente por la OMS; generado por regla derivada de su metodología, verificar manualmente"
+              });
+              seenLasa[key2] = true;
+            }
           }
         }
       }
@@ -1109,6 +1178,8 @@
       '<p class="section-sub">Distinguimos dos niveles: (1) el par o la interacción se comprobó línea por línea contra el texto completo del documento fuente (incluye 6 reglas de interacción verificadas contra los 133 criterios STOPP y 57 START de la versión 3, y los 2 confirmados contra Beers Criteria 2023), visible como "Fuente" en cada tarjeta de resultado; y (2) el resto del motor de reglas, que refleja <b>consenso farmacológico general</b> (mecanismos y severidades ampliamente documentados en la literatura) pero no encontró un criterio numerado exacto al revisar esos mismos documentos completos. La lista de pares LASA se verificó en su totalidad contra la lista oficial de ISMP. La fórmula de riesgo de adherencia es una puntuación heurística propia inspirada en los factores que identifican OMS y NICE; no es un instrumento validado.</p>' +
       '<p class="section-sub"><b>Nota metodológica — combinaciones y concentración:</b> el riesgo de interacción depende de la identidad del principio activo, no de su concentración en mg. Por eso el motor ignora la dosis al clasificar un medicamento y, para productos de combinación (p. ej. "Losartán/Hidroclorotiazida" o cualquier nombre con "/" o "+"), evalúa el riesgo de <i>cada</i> principio activo componente por separado en vez de tratar la combinación como una entidad opaca sin clasificar. El catálogo CUM se reconstruyó para permitir buscar por nombre comercial además de principio activo, y tanto el principio activo como el nombre comercial se simplificaron programáticamente (se removieron concentración, razones tipo "20/5" y forma de sal, p. ej. "Enalapril Maleato 20 mg" → "Enalapril") para habilitar esta clasificación y reducir registros redundantes de la misma marca en distintas concentraciones; esta limpieza es heurística sobre texto de INVIMA con formato inconsistente (incluye erratas propias de la fuente, como espacios faltantes), por lo que combinaciones con redacción atípica pueden no detectarse automáticamente — siempre verificar manualmente.</p>' +
       '<p class="section-sub"><b>Nota metodológica — efecto dual de las combinaciones:</b> un producto de combinación conlleva un riesgo de interacción <i>mayor</i> que la monoterapia, porque cada principio activo componente se evalúa por separado (ver nota anterior) y por tanto puede coincidir con más reglas de interacción que un solo fármaco. Sin embargo, ese mismo producto conlleva un riesgo de <i>no</i>-adherencia <i>menor</i> que tomar los mismos principios activos en tabletas separadas, porque reduce la carga de pastillas (pill burden): un metaanálisis de 44 estudios encontró adherencia significativamente mejor con combinación en tableta única frente a la misma combinación en tabletas libres en 18 de 23 estudios (Parati et al., Hypertension 2021; ver Referencias). El motor de riesgo de adherencia ya refleja esto sin necesidad de ajustar su fórmula, porque cuenta cada producto de combinación como un solo medicamento (una sola toma) en el factor "número de medicamentos" — el mismo dato que hace subir el riesgo de interacción es, para adherencia, un beneficio.</p>' +
+      '<p class="section-sub"><b>Nota metodológica — ampliación de la tabla LASA con la guía OMS 2023:</b> se agregaron 9 pares nuevos a la tabla curada a partir de "Medication safety for look-alike, sound-alike medicines" (OMS, 2023), incluyendo dos casos clínicos de daño real documentados por la OMS (Propranolol/Prednisolona, Carbamazepina/Carbimazol), el par de nombres comerciales Lantus/Lanvis (insulina glargina vs. tioguanina, un antineoplásico) y el par Pregabalina/Vigabatrina (fragmento compartido "gaba" en el interior del nombre). Cada par nuevo se contrastó individualmente contra el catálogo CUM depurado; cuando uno de los dos principios no aparece en el subconjunto vigente/activo colombiano, la tarjeta del hallazgo lo indica explícitamente.</p>' +
+      '<p class="section-sub"><b>Nota metodológica — regla derivada de detección por patrón posicional:</b> además de los pares citados literalmente por la OMS, su Tabla 2 describe un mecanismo más general de confusión: nombres que comparten letras al <i>inicio</i> (p. ej. "Am-", "Az-", "Carb-", "Pr-"), en el <i>interior</i> (p. ej. "-gaba-") o al <i>final</i> (p. ej. "-azol") del nombre — la OMS documenta esto como causa real de errores, no como curiosidad ortográfica. Se generalizó esta metodología a una regla automática (<code>lasaPatternMatch</code>) aplicada a cualquier par de medicamentos del paciente que no esté ya en la tabla curada ni sea detectado por el algoritmo de similitud global (umbral ≥0,72): se exige un prefijo compartido de al menos 2 letras (igual al mínimo de los propios ejemplos de la OMS, "Am"/"Az") <i>más</i> una similitud de Levenshtein de al menos 0,38, o un sufijo compartido de al menos 4 letras <i>más</i> una similitud de al menos 0,45. El umbral de sufijo es más exigente que el de prefijo porque, en español, las terminaciones de los nombres de medicamentos suelen ser morfemas de toda una clase farmacológica (p. ej. "-tina" en casi todas las estatinas y gliptinas) y no un indicio real de confusión — se detectó esto empíricamente al calibrar la regla: "Rosuvastatina"/"Sitagliptina" comparten "-tina" pero su similitud global es solo 0,38, mientras que "Metronidazol"/"Omeprazol" (el propio ejemplo de sufijo de la OMS, "-azol") tiene una similitud de 0,50; el umbral de 0,45 separa ambos casos. También se exige una longitud mínima de 6 caracteres y una diferencia de longitud máxima de 3, para evitar coincidencias triviales entre nombres cortos. Con estos parámetros, la regla generaliza el hallazgo de la OMS a casos no citados textualmente pero estructuralmente análogos — por ejemplo, Amlodipino y Amilorida comparten el inicio "AM-" y tienen una similitud de 0,40, cayendo dentro del patrón que la OMS documenta para el prefijo "Am-" (Amiloride, Amitriptyline, Amlodipine, Amiodarone) aunque ese par específico no aparezca en su tabla. Estos hallazgos se etiquetan con severidad "Bajo/Medio" (más conservadora que un par curado específico) y se marcan explícitamente como "no citado por la OMS; generado por regla derivada", para que quede claro que es un patrón estructural y no una confusión documentada caso por caso — siempre verificar manualmente.</p>' +
       renderReferences() +
       "</section>";
   }
