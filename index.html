@@ -283,11 +283,13 @@
       { name: "Valsartán", cls: "ARAII", dosage: "80 mg", freq: "1x" },
       { name: "Irbesartán", cls: "ARAII", dosage: "150 mg", freq: "1x" },
       { name: "Metoprolol", cls: "BB_Cardio", dosage: "50 mg", freq: "2x" },
-      { name: "Atenolol", cls: "BB_NoSelectivo", dosage: "50 mg", freq: "1x" },
+      { name: "Atenolol", cls: "BB_Cardio", dosage: "50 mg", freq: "1x" },
       { name: "Bisoprolol", cls: "BB_Cardio", dosage: "5 mg", freq: "1x" },
+      { name: "Propranolol", cls: "BB_NoSelectivo", dosage: "40 mg", freq: "2x" },
       { name: "Amlodipina", cls: "BCC_DHP", dosage: "5 mg", freq: "1x" },
       { name: "Nifedipina", cls: "BCC_DHP", dosage: "30 mg", freq: "1x" },
       { name: "Diltiazem", cls: "BCC_NoDHP", dosage: "120 mg", freq: "2x" },
+      { name: "Verapamilo", cls: "BCC_NoDHP", dosage: "120 mg", freq: "2x" },
       { name: "Hidroclorotiazida", cls: "Diuretico_Tiazidico", dosage: "25 mg", freq: "1x" },
       { name: "Furosemida", cls: "Diuretico_Asa", dosage: "40 mg", freq: "1x" },
       { name: "Espironolactona", cls: "AntagonistaMineralocorticoide", dosage: "25 mg", freq: "1x" }
@@ -455,8 +457,8 @@
   var SUBSTANCE_ATC = {
     enalapril: "C09AA02", lisinopril: "C09AA03", ramipril: "C09AA05",
     losartan: "C09CA01", valsartan: "C09CA03", irbesartan: "C09CA04",
-    metoprolol: "C07AB02", atenolol: "C07AB03", bisoprolol: "C07AB07", carvedilol: "C07AG02",
-    amlodipina: "C08CA01", nifedipina: "C08CA05", diltiazem: "C08DB01",
+    metoprolol: "C07AB02", atenolol: "C07AB03", bisoprolol: "C07AB07", carvedilol: "C07AG02", propranolol: "C07AA05",
+    amlodipina: "C08CA01", nifedipina: "C08CA05", diltiazem: "C08DB01", verapamilo: "C08DA01",
     hidroclorotiazida: "C03AA03", furosemida: "C03CA01", torasemida: "C03CA04",
     espironolactona: "C03DA01", eplerenona: "C03DA04",
     metformina: "A10BA02", glibenclamida: "A10BB01", glipizida: "A10BB07", gliclazida: "A10BB09",
@@ -497,8 +499,8 @@
   var ATC5_DUPLICATION_EXEMPT = { R03AC: true, R03BB: true, B01AC: true, C10AX: true };
 
   var ATC5_LABELS = {
-    C09AA: "IECA", C09CA: "ARA II", C07AB: "beta-bloqueante cardioselectivo", C07AG: "beta-bloqueante alfa+beta",
-    C08CA: "bloqueador de calcio dihidropiridínico", C08DB: "bloqueador de calcio no dihidropiridínico",
+    C09AA: "IECA", C09CA: "ARA II", C07AA: "beta-bloqueante no selectivo", C07AB: "beta-bloqueante cardioselectivo", C07AG: "beta-bloqueante alfa+beta",
+    C08CA: "bloqueador de calcio dihidropiridínico", C08DA: "bloqueador de calcio no dihidropiridínico (fenilalquilamina)", C08DB: "bloqueador de calcio no dihidropiridínico (benzotiazepina)",
     C03AA: "diurético tiazídico", C03CA: "diurético de asa", C03DA: "antagonista de la aldosterona",
     A10BA: "biguanida", A10BB: "sulfonilurea", A10BH: "inhibidor de DPP-4", A10BJ: "agonista de GLP-1",
     A10BK: "inhibidor de SGLT2", C10AA: "estatina", C10AB: "fibrato", C10AX: "otro hipolipemiante",
