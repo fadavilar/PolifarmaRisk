@@ -179,6 +179,21 @@
   .refs-card ol { margin: 0; padding-left: 18px; display:flex; flex-direction:column; gap: 8px; }
   .refs-card li { font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; }
   .refs-card li a { font-weight: 600; }
+  .sci-toggle { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 14px; overflow: hidden; }
+  .sci-toggle summary { cursor: pointer; padding: 16px 20px; font-weight: 600; font-size: 0.98rem; list-style: none; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .sci-toggle summary::-webkit-details-marker { display: none; }
+  .sci-toggle summary::after { content: "+"; font-size: 1.2rem; color: var(--text-muted); flex-shrink:0; }
+  .sci-toggle[open] summary::after { content: "\2212"; }
+  .sci-toggle summary:hover { background: var(--surface-2); }
+  .sci-toggle-body { padding: 0 20px 20px; color: var(--text-muted); font-size: 0.88rem; line-height: 1.65; }
+  .sci-toggle-body p { margin: 0 0 14px; }
+  .sci-toggle-body h4 { color: var(--text); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; margin: 18px 0 8px; }
+  .sci-toggle-body h4:first-child { margin-top: 0; }
+  .sci-toggle-body sup a { font-weight: 600; text-decoration: none; }
+  .vancouver-list { margin: 0; padding-left: 22px; display:flex; flex-direction:column; gap: 10px; }
+  .vancouver-list li { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+  .vancouver-list li:target { background: var(--accent-soft); border-radius: 6px; }
+  .vancouver-list li a { font-weight: 600; }
   .med-row { display:flex; align-items:center; justify-content:space-between; gap: 12px; padding: 10px 14px; background: var(--bg); border:1px solid var(--border); border-radius: 9px; }
   .med-row .med-name { font-weight: 600; font-size: 0.9rem; }
   .med-row .med-detail { font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-mono); }
@@ -735,51 +750,27 @@
     }
   ];
 
-  var REFERENCES = [
-    {
-      domain: "Interacciones medicamentosas",
-      items: [
-        { t: "Versión en español de los criterios STOPP/START 3", a: "Delgado-Silveira et al., Rev Esp Geriatr Gerontol 2023;58:101407 — revisado el 2026-07-07; fundamenta 6 reglas (AINE+anticoagulante, ISRS+anticoagulante, betabloqueante+verapamilo/diltiazem, antagonista mineralocorticoide+IECA/ARA-II, dabigatrán+verapamilo/diltiazem, betabloqueante no selectivo+sulfonilurea)", u: "https://doi.org/10.1016/j.regg.2023.101407" },
-        { t: "American Geriatrics Society 2023 Updated AGS Beers Criteria® for Potentially Inappropriate Medication Use in Older Adults", a: "J Am Geriatr Soc, 2023 — fundamenta la regla de benzodiacepina+opioide y corrobora ISRS+anticoagulante", u: "https://agsjournals.onlinelibrary.wiley.com/doi/10.1111/jgs.18372" },
-        { t: "Manejo de los problemas de la salud física en adultos con trastornos mentales severos: Directrices de la OMS (Anexo 6 — interacciones medicamentosas)", a: "OMS/OPS, 2018/2020, vía NCBI Bookshelf — documento sobre trastornos mentales severos, se identifican 5 hallazgos de interacción fármaco-fármaco (ISRS+metformina, ISRS+antiagregante, diurético tiazídico+ISRS, benzodiacepina+verapamilo/diltiazem, ISRS+betabloqueante cardioselectivo) por propiedades farmacocinéticas del medicamento", u: "https://www.ncbi.nlm.nih.gov/books/NBK583436/pdf/Bookshelf_NBK583436.pdf" },
-        { t: "Medscape Drug Interaction Checker", a: "WebMD/Medscape — herramienta de referencia general para el resto de reglas (consenso farmacológico amplio)", u: "https://reference.medscape.com/drug-interactionchecker" },
-        { t: "DrugBank Drug-Drug Interactions (dataset)", a: "Kaggle, dataset por mghobashy, datos sourced de DrugBank — banco de 191.542 pares de interacciones cargado el 2026-07-08; verificación regla por regla programada", u: "https://www.kaggle.com/datasets/mghobashy/drug-drug-interactions/data" },
-        { t: "WHO ATC-DDD Index (snapshot 2021-12-03)", a: "Compilación de fabkury a partir del índice oficial de la OMS (WHO Collaborating Centre for Drug Statistics Methodology) — fuente del mapa principio activo → código ATC-7 usado por el motor de duplicidad terapéutica (ver nota metodológica). Se verificó manualmente cada código contra la monoterapia y vía de administración usada en esta app, corrigiendo coincidencias automáticas erróneas (combinaciones, vías nasal/parenteral) — no aporta reglas de interacción por sí mismo, solo la clasificación de sustancia a subgrupo químico ATC", u: "https://github.com/fabkury/atcd/blob/master/WHO%20ATC-DDD%202021-12-03.csv" }
-      ]
-    },
-    {
-      domain: "Riesgo de adherencia",
-      items: [
-        { t: "Adherence to Long-Term Therapies: Evidence for Action", a: "Organización Mundial de la Salud, 2003 — marco conceptual de factores de riesgo; no define la fórmula de puntuación usada aquí", u: "https://iris.who.int/handle/10665/42682" },
-        { t: "Multimorbidity: clinical assessment and management (NG56)", a: "NICE, 2016 — marco conceptual sobre carga de tratamiento y polifarmacia; no define una fórmula de puntuación", u: "https://www.nice.org.uk/guidance/ng56" },
-        { t: "The Morisky Method for Measuring Medication Adherence in Older Adults With Chronic Diseases: A Cross-Sectional Study", a: "Afkhami S, Asadi F, Emami H, Sabahi A. Health Science Reports, 2025 — estudio en 196 adultos mayores pluripatológicos que identifica autoeficacia, alfabetización en salud y soporte del cónyuge/familiar como los principales predictores de adherencia; fundamenta por qué el motor de riesgo suma puntos por deterioro cognitivo (+10), bajo nivel educativo (+5) y falta de apoyo social (+7)", u: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12037691/" },
-        { t: "Adherence to Single-Pill Versus Free-Equivalent Combination Therapy in Hypertension: A Systematic Review and Meta-Analysis", a: "Parati G, Kjeldsen S, Coca A, Cushman WC, Wang J. Hypertension, 2021;77:692–705, doi: 10.1161/HYPERTENSIONAHA.120.15781 — Metanálisis de 44 estudios: la combinación en una sola tableta (single-pill combination) mejoró significativamente la adherencia frente a la misma combinación en tabletas separadas (free-equivalent combination) en 18 de 23 estudios, y la persistencia en 14 de 16 estudios; el mecanismo señalado es la reducción de la carga de pastillas (pill burden). Fundamenta que el motor de riesgo de adherencia ya captura este efecto correctamente sin cambios de fórmula: un producto de combinación se registra como un solo medicamento (una sola toma), por lo que reduce el conteo de \"número de medicamentos\" frente a tomar los mismos principios activos por separado — ver nota metodológica sobre el efecto dual de las combinaciones (mayor riesgo de interacción, menor riesgo de no-adherencia)", u: "https://www.ahajournals.org/doi/10.1161/HYPERTENSIONAHA.120.15781" }
-      ]
-    },
-    {
-      domain: "Confusión de medicamentos (LASA)",
-      items: [
-        { t: "ISMP List of Confused Drug Names", a: "Institute for Safe Medication Practices, 2023 — los 10 pares base de la tabla se comprobaron uno a uno contra este documento", u: "https://www.ismp.org/system/files/resources/2023-10/ISMP_ConfusedDrugNames_2023.pdf" },
-        { t: "Prevención de errores por confusión en los nombres de los medicamentos", a: "ISMP-España — lectura de referencia general", u: "https://www.ismp-espana.org/documentos/view/63" },
-        { t: "Gestión segura de medicamentos LASA: estrategias para prevenir errores de dispensación en Droguerías Aliadas", a: "Ortiz Isaza G., trabajo de grado, Tecnología en Regencia de Farmacia, Universidad de Antioquia, 2026 — Colombia no cuenta con un listado LASA oficial propio (el país regula la farmacovigilancia en general, no una lista LASA específica) y documenta en campo el par Cefadroxilo/Cefalexina por similitud fonética", u: "https://bibliotecadigital.udea.edu.co/server/api/core/bitstreams/8df279ed-6b27-4eda-82cc-9aa7b7456137/content" },
-        { t: "Medication safety for look-alike, sound-alike medicines", a: "Organización Mundial de la Salud, Ginebra, 2023 (ISBN 978-92-4-005889-7) — secciones 1 a 4.3 revisadas (antecedentes, ejemplos, causas y las tablas 2, 3 y 5 de las que se extrajeron los pares y el patrón posicional citados aquí); no se revisaron en detalle las secciones 4.4 en adelante, barreras/facilitadores, referencias ni el anexo. Aporta 9 pares curados nuevos (Propranolol/Prednisolona y Carbamazepina/Carbimazol con casos clínicos documentados de daño real; Daunorubicina/Doxorubicina, Hidralazina/Hidroxizina, Bupropion/Buspirona, Ciclosporina/Cicloserina, Metilprednisolona/Metiltestosterona y Acetazolamida/Acetohexamida de la Tabla 5, tall man lettering FDA/ISMP; Lantus/Lanvis, un par de nombres comerciales — insulina glargina confundida con tioguanina, un antineoplásico; y Pregabalina/Vigabatrina de la Tabla 2) y fundamenta la regla algorítmica derivada por patrón posicional (ver nota metodológica). Cada par se contrastó contra el catálogo CUM depurado de esta app; cuando un principio no se encontró en el subconjunto vigente/activo colombiano, se anota explícitamente en la tarjeta del hallazgo — la ausencia no implica que el medicamento no exista en Colombia", u: "https://iris.who.int/server/api/core/bitstreams/5a2f5a2c-e95c-45b8-ad44-f15c9351f9f1/content" }
-      ]
-    },
-    {
-      domain: "Fundamento clínico de los arquetipos",
-      items: [
-        { t: "2026 AHA/ACC/ADA/ASN Guideline for the Prevention, Detection, Evaluation, and Management of Cardiovascular-Kidney-Metabolic Syndrome", a: "Ndumele CE et al., Circulation, 2026;153 —  primera guía conjunta AHA/ACC/ADA/ASN sobre el síndrome cardio-renal-metabólico (CKM); retira y reemplaza la guía 2013 AHA/ACC/TOS de sobrepeso/obesidad. Define CKM como \"trastorno sistémico caracterizado por interacciones fisiopatológicas entre factores de riesgo metabólico, ERC y el sistema cardiovascular\" con estadificación 0–4 (estadio 1: adiposidad; estadio 2: factores de riesgo metabólico y/o ERC; estadio 3: ECV subclínica; estadio 4: ECV clínica). Fundamenta por qué los arquetipos de la app agrupan HTA+DM2+obesidad+dislipidemia(+ERC) como un continuo fisiopatológico reconocido, y no como una combinación arbitraria de comorbilidades", u: "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001453" }
-      ]
-    }
+  // Lista de referencias en formato Vancouver, numerada en el orden en que se citan por primera vez
+  // en Introducción y Materiales y Métodos (sección "Inicio"). El número de cada entrada es su índice
+  // (1-based) en este arreglo — no reordenar sin actualizar las citas <sup> en INTRO_HTML/METHODS_HTML.
+  var REFERENCE_LIST = [
+    { text: "Delgado-Silveira E, Molina Mendoza MD, Montero-Errasquín B, et al. Versión en español de los criterios STOPP/START versión 3. Rev Esp Geriatr Gerontol. 2023;58(2):101407.", u: "https://doi.org/10.1016/j.regg.2023.101407" },
+    { text: "American Geriatrics Society. 2023 Updated AGS Beers Criteria® for Potentially Inappropriate Medication Use in Older Adults. J Am Geriatr Soc. 2023.", u: "https://agsjournals.onlinelibrary.wiley.com/doi/10.1111/jgs.18372" },
+    { text: "World Health Organization, Organización Panamericana de la Salud. Manejo de los problemas de la salud física en adultos con trastornos mentales severos: directrices de la OMS. Ginebra: OMS; 2018.", u: "https://www.ncbi.nlm.nih.gov/books/NBK583436/pdf/Bookshelf_NBK583436.pdf" },
+    { text: "WebMD. Medscape Drug Interaction Checker [Internet].", u: "https://reference.medscape.com/drug-interactionchecker" },
+    { text: "mghobashy. Drug-Drug Interactions dataset [Internet]. Kaggle; 2024. Datos de DrugBank.", u: "https://www.kaggle.com/datasets/mghobashy/drug-drug-interactions/data" },
+    { text: "World Health Organization. Adherence to Long-Term Therapies: Evidence for Action. Ginebra: OMS; 2003.", u: "https://iris.who.int/handle/10665/42682" },
+    { text: "National Institute for Health and Care Excellence. Multimorbidity: clinical assessment and management [NG56]. Londres: NICE; 2016.", u: "https://www.nice.org.uk/guidance/ng56" },
+    { text: "Afkhami S, Asadi F, Emami H, Sabahi A. The Morisky Method for Measuring Medication Adherence in Older Adults With Chronic Diseases: A Cross-Sectional Study. Health Sci Rep. 2025.", u: "https://pmc.ncbi.nlm.nih.gov/articles/PMC12037691/" },
+    { text: "Parati G, Kjeldsen S, Coca A, Cushman WC, Wang J. Adherence to Single-Pill Versus Free-Equivalent Combination Therapy in Hypertension: A Systematic Review and Meta-Analysis. Hypertension. 2021;77(3):692–705.", u: "https://www.ahajournals.org/doi/10.1161/HYPERTENSIONAHA.120.15781" },
+    { text: "Institute for Safe Medication Practices. List of Confused Drug Names. Horsham (PA): ISMP; 2023.", u: "https://www.ismp.org/system/files/resources/2023-10/ISMP_ConfusedDrugNames_2023.pdf" },
+    { text: "ISMP-España. Prevención de errores por confusión en los nombres de los medicamentos [Internet].", u: "https://www.ismp-espana.org/documentos/view/63" },
+    { text: "Ortiz Isaza G. Gestión segura de medicamentos LASA: estrategias para prevenir errores de dispensación en Droguerías Aliadas [trabajo de grado]. Medellín: Universidad de Antioquia; 2026.", u: "https://bibliotecadigital.udea.edu.co/server/api/core/bitstreams/8df279ed-6b27-4eda-82cc-9aa7b7456137/content" },
+    { text: "World Health Organization. Medication safety for look-alike, sound-alike medicines. Ginebra: OMS; 2023. ISBN 978-92-4-005889-7.", u: "https://iris.who.int/server/api/core/bitstreams/5a2f5a2c-e95c-45b8-ad44-f15c9351f9f1/content" },
+    { text: "Ndumele CE, Rangaswami J, Chow SL, et al. 2026 AHA/ACC/ADA/ASN Guideline for the Prevention, Detection, Evaluation, and Management of Cardiovascular-Kidney-Metabolic Syndrome. Circulation. 2026;153.", u: "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001453" },
+    { text: "Instituto Nacional de Vigilancia de Medicamentos y Alimentos (INVIMA). Código Único de Medicamentos (CUM) — Registros vigentes [Internet]. Bogotá: datos.gov.co.", u: "https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" },
+    { text: "fabkury. WHO ATC-DDD Index, snapshot 2021-12-03 [Internet]. GitHub.", u: "https://github.com/fabkury/atcd/blob/master/WHO%20ATC-DDD%202021-12-03.csv" }
   ];
-  if (typeof CUM_CATALOG !== "undefined") {
-    REFERENCES.push({
-      domain: "Catálogo de medicamentos",
-      items: [
-        { t: "Código Único de Medicamentos (CUM) — Registros vigentes", a: "INVIMA, vía datos.gov.co — Datos Abiertos Colombia. Reconstruido 2026-07-08; filtrado a registros \"Vigente\"/\"Activo\"; " + CUM_CATALOG.length + " pares únicos de nombre comercial + principio activo (permite buscar tanto por marca como por principio activo). El principio activo se simplificó removiendo concentración en mg y forma de sal — ver nota metodológica en Confusión de medicamentos.", u: "https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" }
-      ]
-    });
-  }
 
   /* ---------------------------------------------------------------------
    * 2. UTILIDADES
@@ -1283,24 +1274,59 @@
       '<p class="section-sub">Motor híbrido: reglas clínicas deterministas para interacciones y LASA, puntuación ponderada explicable para adherencia y riesgo global.</p>' +
       '<div class="feature-grid">' + features + "</div></section>" +
       '<section class="container" id="referencias">' +
-      '<h2 class="section-title">Referencias y evidencia</h2>' +
-      '<p class="section-sub">Distinguimos dos niveles: (1) el par o la interacción se comprobó línea por línea contra el texto completo del documento fuente (incluye 6 reglas de interacción verificadas contra los 133 criterios STOPP y 57 START de la versión 3, y los 2 confirmados contra Beers Criteria 2023), visible como "Fuente" en cada tarjeta de resultado; y (2) el resto del motor de reglas, que refleja <b>consenso farmacológico general</b> (mecanismos y severidades ampliamente documentados en la literatura) pero no encontró un criterio numerado exacto al revisar esos mismos documentos completos. La lista de pares LASA se verificó en su totalidad contra la lista oficial de ISMP. La fórmula de riesgo de adherencia es una puntuación heurística propia inspirada en los factores que identifican OMS y NICE; no es un instrumento validado.</p>' +
-      '<p class="section-sub"><b>Nota metodológica — combinaciones y concentración:</b> el riesgo de interacción depende de la identidad del principio activo, no de su concentración en mg. Por eso el motor ignora la dosis al clasificar un medicamento y, para productos de combinación (p. ej. "Losartán/Hidroclorotiazida" o cualquier nombre con "/" o "+"), evalúa el riesgo de <i>cada</i> principio activo componente por separado en vez de tratar la combinación como una entidad opaca sin clasificar. El catálogo CUM se reconstruyó para permitir buscar por nombre comercial además de principio activo, y tanto el principio activo como el nombre comercial se simplificaron programáticamente (se removieron concentración, razones tipo "20/5" y forma de sal, p. ej. "Enalapril Maleato 20 mg" → "Enalapril") para habilitar esta clasificación y reducir registros redundantes de la misma marca en distintas concentraciones; esta limpieza es heurística sobre texto de INVIMA con formato inconsistente (incluye erratas propias de la fuente, como espacios faltantes), por lo que combinaciones con redacción atípica pueden no detectarse automáticamente — siempre verificar manualmente.</p>' +
-      '<p class="section-sub"><b>Nota metodológica — efecto dual de las combinaciones:</b> un producto de combinación conlleva un riesgo de interacción <i>mayor</i> que la monoterapia, porque cada principio activo componente se evalúa por separado (ver nota anterior) y por tanto puede coincidir con más reglas de interacción que un solo fármaco. Sin embargo, ese mismo producto conlleva un riesgo de <i>no</i>-adherencia <i>menor</i> que tomar los mismos principios activos en tabletas separadas, porque reduce la carga de pastillas (pill burden): un metaanálisis de 44 estudios encontró adherencia significativamente mejor con combinación en tableta única frente a la misma combinación en tabletas libres en 18 de 23 estudios (Parati et al., Hypertension 2021; ver Referencias). El motor de riesgo de adherencia ya refleja esto sin necesidad de ajustar su fórmula, porque cuenta cada producto de combinación como un solo medicamento (una sola toma) en el factor "número de medicamentos" — el mismo dato que hace subir el riesgo de interacción es, para adherencia, un beneficio.</p>' +
-      '<p class="section-sub"><b>Nota metodológica — ampliación de la tabla LASA con la guía OMS 2023:</b> se agregaron 9 pares nuevos a la tabla curada a partir de "Medication safety for look-alike, sound-alike medicines" (OMS, 2023), incluyendo dos casos clínicos de daño real documentados por la OMS (Propranolol/Prednisolona, Carbamazepina/Carbimazol), el par de nombres comerciales Lantus/Lanvis (insulina glargina vs. tioguanina, un antineoplásico) y el par Pregabalina/Vigabatrina (fragmento compartido "gaba" en el interior del nombre). Cada par nuevo se contrastó individualmente contra el catálogo CUM depurado; cuando uno de los dos principios no aparece en el subconjunto vigente/activo colombiano, la tarjeta del hallazgo lo indica explícitamente.</p>' +
-      '<p class="section-sub"><b>Nota metodológica — regla derivada de detección por patrón posicional:</b> además de los pares citados literalmente por la OMS, su Tabla 2 describe un mecanismo más general de confusión: nombres que comparten letras al <i>inicio</i> (p. ej. "Am-", "Az-", "Carb-", "Pr-"), en el <i>interior</i> (p. ej. "-gaba-") o al <i>final</i> (p. ej. "-azol") del nombre — la OMS documenta esto como causa real de errores, no como curiosidad ortográfica. Se generalizó esta metodología a una regla automática (<code>lasaPatternMatch</code>) aplicada a cualquier par de medicamentos del paciente que no esté ya en la tabla curada ni sea detectado por el algoritmo de similitud global (umbral ≥0,72): se exige un prefijo compartido de al menos 2 letras (igual al mínimo de los propios ejemplos de la OMS, "Am"/"Az") <i>más</i> una similitud de Levenshtein de al menos 0,38, o un sufijo compartido de al menos 4 letras <i>más</i> una similitud de al menos 0,45. El umbral de sufijo es más exigente que el de prefijo porque, en español, las terminaciones de los nombres de medicamentos suelen ser morfemas de toda una clase farmacológica (p. ej. "-tina" en casi todas las estatinas y gliptinas) y no un indicio real de confusión — se detectó esto empíricamente al calibrar la regla: "Rosuvastatina"/"Sitagliptina" comparten "-tina" pero su similitud global es solo 0,38, mientras que "Metronidazol"/"Omeprazol" (el propio ejemplo de sufijo de la OMS, "-azol") tiene una similitud de 0,50; el umbral de 0,45 separa ambos casos. También se exige una longitud mínima de 6 caracteres y una diferencia de longitud máxima de 3, para evitar coincidencias triviales entre nombres cortos. Con estos parámetros, la regla generaliza el hallazgo de la OMS a casos no citados textualmente pero estructuralmente análogos — por ejemplo, Amlodipino y Amilorida comparten el inicio "AM-" y tienen una similitud de 0,40, cayendo dentro del patrón que la OMS documenta para el prefijo "Am-" (Amiloride, Amitriptyline, Amlodipine, Amiodarone) aunque ese par específico no aparezca en su tabla. Estos hallazgos se etiquetan con severidad "Bajo/Medio" (más conservadora que un par curado específico) y se marcan explícitamente como "no citado por la OMS; generado por regla derivada", para que quede claro que es un patrón estructural y no una confusión documentada caso por caso — siempre verificar manualmente.</p>' +
-      '<p class="section-sub"><b>Nota metodológica — duplicidad terapéutica por grupo ATC (reporte de usuario, 2026-07-08):</b> se reportó que dos inhibidores de SGLT2 (Empagliflozina + Dapagliflozina) no generaban ningún hallazgo de interacción. Diagnóstico: el motor original de interacciones solo compara clases <i>distintas</i> entre sí (<code>CLASS_PAIR_RULES</code>), nunca detecta cuando dos medicamentos son de la <i>misma</i> clase — un escenario de sobreprescripción distinto de una interacción farmacocinética/farmacodinámica clásica, pero igual de relevante clínicamente (mayor riesgo acumulado de efectos adversos, sin beneficio aditivo). Se agregó un motor de duplicidad terapéutica que evalúa si dos medicamentos comparten el mismo <b>subgrupo químico ATC</b> (los primeros 5 caracteres del código, p. ej. "A10BK" para inhibidores de SGLT2), en vez de las ~36 clases curadas internas de la app, porque el ATC es un estándar internacional verificable y de cobertura más amplia. El código ATC no se tomó directamente del campo <code>atc</code> del catálogo CUM: ese campo refleja el <i>producto registrado</i> ante INVIMA, que puede ser una combinación de dosis fija (p. ej. una fila de "Empagliflozina" en el CUM trae el ATC "A10BD19", que en realidad es el código del producto combinado Empagliflozina/Linagliptina) — usarlo tal cual habría asignado a un principio activo individual el código de un producto distinto, precisamente el problema que esta app busca evitar al descomponer combinaciones en sus componentes (ver nota metodológica sobre combinaciones). En su lugar, se construyó un mapa de ~80 principios activos (los que ya alimentan el motor de clasificación) contra el índice oficial <b>OMS ATC-DDD, snapshot 2021-12-03</b> (github.com/fabkury/atcd), verificando manualmente que cada código correspondiera a la monoterapia y a la vía de administración que usa esta app — varias coincidencias automáticas iniciales resultaron ser incorrectas y se corrigieron a mano: Tiotropio (se tomó el código inhalado, no el de la combinación con olodaterol), Ibuprofeno (código oral, no el parenteral de uso neonatal), Ácido acetilsalicílico (código de uso antiagregante, no el de uso odontológico), y Budesonida/Beclometasona/Fluticasona/Ipratropio (código de vía respiratoria/inhalada, no el de vía nasal, que aparecía primero en el índice). Se excluyen de la regla los subgrupos ATC donde combinar dos agentes es terapia estándar respaldada por guías: R03AC (beta-2 agonistas de acción corta y prolongada), R03BB (anticolinérgicos inhalados de acción corta y prolongada), B01AC (doble antiagregación tras síndrome coronario agudo) y C10AX (donde la OMS agrupa, al mismo nivel de 5 caracteres, tanto a los inhibidores de PCSK9 como a la Ezetimiba — mecanismos distintos que se combinan a propósito en hipercolesterolemia refractaria). <b>Limitaciones declaradas:</b> Tirzepatida no está en el snapshot 2021-12-03 de la OMS (fármaco más nuevo) y queda sin mapear; excluir C10AX por completo también deja sin detectar la duplicidad genuina de combinar dos inhibidores de PCSK9 distintos entre sí, un caso raro que se sacrificó para no generar falsos positivos en el caso mucho más frecuente de PCSK9i+Ezetimiba; la OMS clasifica la Codeína bajo antitusivos (R05DA) incluso para su uso analgésico, por lo que no comparte grupo ATC con Tramadol pese a que la clasificación clínica interna de esta app los agrupa a ambos como "Opioide menor" — una divergencia real entre la taxonomía regulatoria de la OMS y el uso clínico pragmático, que se deja tal cual y se documenta aquí en vez de forzar una corrección no verificable. El mapeo cubre actualmente los principios activos curados que ya alimenta el motor de clasificación (sección "Qué evalúa el algoritmo"), no las 11.299 filas completas del catálogo CUM.</p>' +
-      renderReferences() +
+      '<h2 class="section-title">Fundamento científico</h2>' +
+      "<details class=\"sci-toggle\"><summary>1. Introducción</summary><div class=\"sci-toggle-body\">" + renderIntro() + "</div></details>" +
+      "<details class=\"sci-toggle\"><summary>2. Materiales y métodos</summary><div class=\"sci-toggle-body\">" + renderMethods() + "</div></details>" +
+      "<details class=\"sci-toggle\"><summary>3. Referencias</summary><div class=\"sci-toggle-body\">" + renderReferenceList() + "</div></details>" +
       "</section>";
   }
 
-  function renderReferences() {
-    return '<div class="refs-section">' + REFERENCES.map(function (group) {
-      var items = group.items.map(function (r) {
-        return "<li>" + '<a href="' + escapeHtml(r.u) + '" target="_blank" rel="noopener">' + escapeHtml(r.t) + "</a><br/>" + escapeHtml(r.a) + "</li>";
-      }).join("");
-      return '<div class="refs-card"><h3>' + withAbbr(group.domain) + "</h3><ol>" + items + "</ol></div>";
-    }).join("") + "</div>";
+  // Cita en superíndice enlazada a la entrada N de REFERENCE_LIST (estilo Vancouver: numeración por
+  // orden de primera aparición en el texto, no alfabética).
+  function cite(n) {
+    if (Array.isArray(n)) return n.map(cite).join('<sup>,</sup>');
+    return '<sup><a href="#ref-' + n + '">' + n + "</a></sup>";
+  }
+
+  function renderReferenceList() {
+    var items = REFERENCE_LIST.map(function (r, idx) {
+      var n = idx + 1;
+      return '<li id="ref-' + n + '">' + escapeHtml(r.text) + ' <a href="' + escapeHtml(r.u) + '" target="_blank" rel="noopener">Disponible en: ' + escapeHtml(r.u) + "</a></li>";
+    }).join("");
+    return '<ol class="vancouver-list">' + items + "</ol>";
+  }
+
+  // Introducción: contexto clínico de los tres ejes de riesgo que evalúa la app y del fundamento de
+  // los arquetipos de paciente, con citas Vancouver en superíndice.
+  function renderIntro() {
+    return "" +
+      "<p>La polifarmacia en pacientes con multimorbilidad crónica se asocia a tres riesgos clínicos bien documentados. El " +
+      "<b>riesgo de interacción farmacológica</b> crece de forma combinatoria con el número de medicamentos; esta aplicación evalúa cada par de fármacos del paciente contra una matriz de reglas fundamentada en los criterios STOPP/START versión 3" + cite(1) + ", los AGS Beers Criteria 2023" + cite(2) + " y las directrices de la OMS/OPS sobre comorbilidad física en trastornos mentales severos" + cite(3) + ", complementada con consenso farmacológico general" + cite([4, 5]) + ".</p>" +
+      "<p>El <b>riesgo de no-adherencia terapéutica</b> aumenta con la carga de tratamiento y la complejidad posológica, factores descritos conceptualmente por la OMS" + cite(6) + " y por la guía de multimorbilidad de NICE" + cite(7) + ". Los pesos específicos del modelo de puntuación de esta app se apoyan en los predictores de adherencia identificados por Afkhami et al." + cite(8) + " (autoeficacia, alfabetización en salud, soporte familiar) y en la evidencia de que los productos de combinación en dosis fija mejoran la adherencia frente a la misma combinación en tabletas separadas" + cite(9) + ".</p>" +
+      "<p>El <b>riesgo de confusión entre medicamentos</b> con nombre o aspecto similar (LASA, <i>look-alike, sound-alike</i>) es una causa reconocida de errores de medicación. La tabla de pares confundibles se fundamenta en la lista oficial del ISMP" + cite([10, 11]) + ", en un hallazgo de campo documentado en el contexto colombiano" + cite(12) + " — dado que el país no cuenta con un listado LASA oficial propio — y en la guía de la OMS sobre medicamentos LASA" + cite(13) + ".</p>" +
+      "<p>Finalmente, los tres <b>arquetipos de paciente</b> que ofrece la app agrupan hipertensión arterial, diabetes mellitus tipo 2, obesidad, dislipidemia y, en un caso, enfermedad renal crónica — no de forma arbitraria, sino siguiendo el continuo cardiovascular-renal-metabólico (CKM) formalizado por la guía conjunta AHA/ACC/ADA/ASN 2026" + cite(14) + ".</p>";
+  }
+
+  // Materiales y métodos: descripción única y no redundante de cada componente del motor de riesgo.
+  // Al editar, integrar hallazgos nuevos en el párrafo del componente correspondiente en vez de anexar
+  // una nota metodológica nueva — evita que el texto crezca de forma redundante entre iteraciones.
+  function renderMethods() {
+    var cumCount = (typeof CUM_CATALOG !== "undefined") ? CUM_CATALOG.length : 0;
+    return "" +
+      "<h4>Clasificación de medicamentos</h4>" +
+      "<p>El motor de riesgo clasifica cada medicamento por identidad de principio activo, no por nombre de producto ni por concentración. Los productos de combinación se descomponen por sus separadores habituales (\"/\" o \"+\") y cada componente se clasifica por separado contra un diccionario de ~90 principios activos curados, de modo que un mismo par de medicamentos puede activar más de una regla de interacción simultáneamente cuando ambos componentes de una combinación son clínicamente relevantes.</p>" +
+      "<h4>Motor de interacciones</h4>" +
+      "<p>Se generan todos los pares posibles de medicamentos del paciente (combinatoria N×(N−1)/2) y se comparan contra una matriz de reglas por clase farmacológica y por nombre exacto, fundamentada según se describe en la Introducción" + cite([1, 2, 3, 4, 5]) + ". Una regla especial de tres fármacos (\"triple whammy\": IECA/ARA-II + diurético + AINE) se evalúa aparte; está ampliamente documentada en farmacovigilancia, pero no corresponde a un criterio STOPP/START único.</p>" +
+      "<h4>Duplicidad terapéutica por grupo ATC</h4>" +
+      "<p>Además de las interacciones entre clases distintas, el motor detecta cuando dos medicamentos pertenecen al mismo subgrupo químico ATC (los primeros 5 caracteres del código, p. ej. \"A10BK\" para inhibidores de SGLT2) — un escenario de sobreprescripción sin beneficio aditivo demostrado que una matriz de reglas por clases distintas no puede capturar por diseño. El código ATC no se toma directamente del catálogo CUM, porque ese campo refleja el producto registrado ante INVIMA — que puede ser una combinación de dosis fija — y no el principio activo individual; asignarlo tal cual reintroduciría el problema que la descomposición de combinaciones busca evitar. En su lugar se construyó un mapa de ~80 principios activos verificado manualmente contra el índice oficial OMS ATC-DDD" + cite(16) + ", corrigiendo los casos en que la primera coincidencia automática correspondía a una combinación o a una vía de administración distinta de la usada en esta app (p. ej. formulaciones nasales o parenterales en vez de las orales/inhaladas empleadas aquí). Se excluyen de la regla los subgrupos donde combinar dos agentes es terapia estándar: beta-2 agonistas de acción corta y prolongada, anticolinérgicos inhalados de acción corta y prolongada, doble antiagregación tras síndrome coronario agudo, e inhibidores de PCSK9 con ezetimiba — estos dos últimos agrupados por la OMS en el mismo subgrupo de 5 caracteres pese a tener mecanismos complementarios que se combinan a propósito en hipercolesterolemia refractaria. El mapeo cubre actualmente los principios activos curados que alimentan el motor de clasificación, no la totalidad del catálogo CUM.</p>" +
+      "<h4>Detección de medicamentos LASA</h4>" +
+      "<p>Se combinan tres capas de detección, en orden de prioridad: (1) una tabla curada de pares verificados contra el ISMP" + cite([10, 11]) + ", un hallazgo de campo colombiano" + cite(12) + " y la guía OMS 2023" + cite(13) + "; (2) un algoritmo de similitud de cadenas (distancia de Levenshtein, umbral ≥0,72) para pares no catalogados; y (3) una regla derivada que generaliza el mecanismo de letras compartidas al inicio o al final del nombre que documenta la OMS" + cite(13) + ", calibrada empíricamente (prefijo ≥2 letras y similitud ≥0,38, o sufijo ≥4 letras y similitud ≥0,45) para extender la detección a casos estructuralmente análogos no citados textualmente por la fuente, sin generar falsos positivos por sufijos morfológicos genéricos del español (p. ej. \"-tina\", común a estatinas y gliptinas).</p>" +
+      "<h4>Catálogo de medicamentos (CUM)</h4>" +
+      "<p>El buscador de medicamentos se reconstruyó a partir de las 121.728 filas vigentes/activas del catálogo oficial de INVIMA" + cite(15) + ", deduplicado por el par (nombre comercial, principio activo) tras remover concentración y forma de sal de ambos campos — una simplificación deliberada, ya que el riesgo de interacción depende de la identidad del principio activo y no de su dosis. El resultado son " + cumCount + " registros buscables tanto por marca como por principio activo.</p>" +
+      "<h4>Puntuación de riesgo de adherencia</h4>" +
+      "<p>Es un modelo heurístico propio (número de medicamentos, complejidad posológica, factores del paciente), inspirado conceptualmente en la OMS" + cite(6) + " y NICE" + cite(7) + " y calibrado con los predictores identificados por Afkhami et al." + cite(8) + ", pero no es un instrumento validado externamente. Los productos de combinación cuentan como un solo medicamento en este modelo, lo que captura correctamente su menor carga de pastillas frente a los mismos principios activos por separado" + cite(9) + " — el mismo atributo que aumenta el riesgo de interacción (más principios activos evaluados por separado) reduce el riesgo de no-adherencia.</p>" +
+      "<h4>Limitaciones generales</h4>" +
+      "<p>El motor de clases e interacciones cubre ~90 principios activos curados; un medicamento fuera de ese conjunto participa solo en las reglas de nombre exacto. Las reglas marcadas \"farmacología general\" no tienen un criterio numerado exacto verificado contra STOPP/START v3" + cite(1) + ", Beers 2023" + cite(2) + " o el Anexo 6 OMS/OPS" + cite(3) + ". La fórmula de adherencia y el modelo de agregación de riesgo global son heurísticos propios sin validación clínica prospectiva.</p>";
   }
 
   function renderForm() {
@@ -1578,9 +1604,11 @@
       '<div class="detail-tabs">' + tabs + "</div>" +
       body +
       '<div class="print-methodology">' +
-      '<h3 class="print-only-title">Metodología y referencias</h3>' +
-      '<p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Cada hallazgo de este informe cita su fuente ("Fuente: ...") junto a la recomendación. Bibliografía completa a continuación.</p>' +
-      renderReferences() +
+      '<h3 class="print-only-title">Materiales y métodos</h3>' +
+      '<p style="font-size:0.8rem;color:var(--text-muted);margin:0 0 14px;">Cada hallazgo de este informe cita su fuente ("Fuente: ...") junto a la recomendación. Detalle metodológico y bibliografía completa (formato Vancouver) a continuación.</p>' +
+      '<div class="sci-toggle-body" style="padding:0;">' + renderMethods() + "</div>" +
+      '<h3 class="print-only-title">Referencias</h3>' +
+      renderReferenceList() +
       "</div>" +
       "</section>";
   }
@@ -1686,7 +1714,10 @@
     state.view = "home";
     render();
     var el = document.getElementById("referencias");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (el) {
+      el.querySelectorAll(".sci-toggle").forEach(function (d) { d.open = true; });
+      el.scrollIntoView({ behavior: "smooth" });
+    }
   }
 
   function exportReport() {
