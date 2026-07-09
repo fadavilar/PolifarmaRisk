@@ -436,6 +436,90 @@
     Antiagregante: "Antiagregante", IBP: "Inhibidor de bomba de protones", Antibiotico: "Antibiótico"
   };
 
+  // Mapa principio activo (normalizado) -> código ATC-7 canónico de monoterapia, verificado a mano
+  // contra el índice oficial WHO ATC-DDD, snapshot 2021-12-03 (github.com/fabkury/atcd). Reemplaza
+  // el uso directo del campo "atc" del catálogo CUM para este propósito: ese campo refleja el
+  // PRODUCTO registrado ante INVIMA (que puede ser una combinación de dosis fija, p. ej. Empagliflozina
+  // aparece con atc="A10BD19" en el registro de "Empagliflozina/Linagliptina"), no el principio activo
+  // individual — usarlo tal cual para un motor que ahora descompone combinaciones en sus componentes
+  // (ver classifyMedName) asignaría a un principio activo el código de un producto distinto del que
+  // en realidad es. Por eso se construyó este mapeo aparte, a nivel de sustancia, contra la fuente OMS.
+  // Varios términos requirieron corrección manual porque la primera coincidencia en el índice OMS
+  // correspondía a una vía de administración o combinación distinta de la usada en esta app (ver nota
+  // metodológica completa en la sección de Referencias): Tiotropio (se tomó R03BB04 inhalado, no
+  // R03AL06 que es la combinación con olodaterol), Ibuprofeno (M01AE01 oral, no C01EB16 parenteral
+  // neonatal), Ácido acetilsalicílico (B01AC06 uso antiagregante, no A01AD05 uso odontológico),
+  // Budesonida/Beclometasona/Fluticasona/Ipratropio (código Rxx inhalado/respiratorio, no el código
+  // "N" de uso nasal que aparecía primero en el índice). Tirzepatida no está en el snapshot 2021-12-03
+  // (fármaco más nuevo) y queda sin mapear.
+  var SUBSTANCE_ATC = {
+    enalapril: "C09AA02", lisinopril: "C09AA03", ramipril: "C09AA05",
+    losartan: "C09CA01", valsartan: "C09CA03", irbesartan: "C09CA04",
+    metoprolol: "C07AB02", atenolol: "C07AB03", bisoprolol: "C07AB07", carvedilol: "C07AG02",
+    amlodipina: "C08CA01", nifedipina: "C08CA05", diltiazem: "C08DB01",
+    hidroclorotiazida: "C03AA03", furosemida: "C03CA01", torasemida: "C03CA04",
+    espironolactona: "C03DA01", eplerenona: "C03DA04",
+    metformina: "A10BA02", glibenclamida: "A10BB01", glipizida: "A10BB07", gliclazida: "A10BB09",
+    sitagliptina: "A10BH01", vildagliptina: "A10BH02",
+    semaglutida: "A10BJ06", dulaglutida: "A10BJ05",
+    empagliflozina: "A10BK03", canagliflozina: "A10BK02", dapagliflozina: "A10BK01",
+    atorvastatina: "C10AA05", simvastatina: "C10AA01", rosuvastatina: "C10AA07", pravastatina: "C10AA03",
+    fenofibrato: "C10AB05", bezafibrato: "C10AB02",
+    evolocumab: "C10AX13", alirocumab: "C10AX14", ezetimiba: "C10AX09",
+    salbutamol: "R03AC02", formoterol: "R03AC13", salmeterol: "R03AC12",
+    ipratropio: "R03BB01", tiotropio: "R03BB04",
+    beclometasona: "R03BA01", fluticasona: "R03BA05", budesonida: "R03BA02",
+    teofilina: "R03DA04", orlistat: "A08AB01",
+    fluoxetina: "N06AB03", sertralina: "N06AB06", escitalopram: "N06AB10", paroxetina: "N06AB05",
+    venlafaxina: "N06AX16", duloxetina: "N06AX21",
+    sacubitrilo: "C09DX04", // solo existe combinado con valsartán en la nomenclatura OMS
+    sevelamero: "V03AE02", carbonatodecalcio: "A12AA04", calcitriol: "A11CC04",
+    epoetinaalfa: "B03XA01", // OMS lo agrupa bajo "erythropoietin" genérico, sin distinguir alfa/beta a nivel de sustancia de referencia
+    ibuprofeno: "M01AE01", naproxeno: "M01AE02", diclofenaco: "M01AB05", meloxicam: "M01AC06",
+    paracetamol: "N02BE01", tramadol: "N02AX02",
+    codeina: "R05DA04", // la OMS clasifica la referencia de codeína bajo antitusivos (R05DA), no bajo analgésicos, aun para uso analgésico — ver nota metodológica
+    alprazolam: "N05BA12", lorazepam: "N05BA06", diazepam: "N05BA01", clonazepam: "N03AE01",
+    apixaban: "B01AF02", rivaroxaban: "B01AF01", dabigatran: "B01AE07",
+    warfarina: "B01AA03", acenocumarol: "B01AA07",
+    acidoacetilsalicilico: "B01AC06", clopidogrel: "B01AC04",
+    omeprazol: "A02BC01", pantoprazol: "A02BC02", ciprofloxacino: "J01MA02"
+  };
+
+  // Grupos ATC (nivel 5, subgrupo químico) donde combinar dos agentes es terapia estándar respaldada
+  // por guías, no una duplicidad accidental: R03AC (beta-2 agonistas de acción corta + prolongada,
+  // manejo habitual de EPOC/asma), R03BB (anticolinérgicos inhalados de acción corta + prolongada,
+  // mismo caso), B01AC (doble antiagregación tras síndrome coronario agudo o angioplastia, tratamiento
+  // estándar). C10AX ("otros hipolipemiantes") se excluye porque la OMS agrupa ahí, al mismo nivel de
+  // 5 caracteres, tanto a los inhibidores de PCSK9 (Evolocumab, Alirocumab) como a la Ezetimiba —
+  // mecanismos distintos y complementarios que se combinan a propósito en hipercolesterolemia
+  // refractaria, no una duplicidad; esto es una imprecisión conocida de usar el nivel de 5 caracteres
+  // para ese subgrupo específico de la OMS (ver nota metodológica).
+  var ATC5_DUPLICATION_EXEMPT = { R03AC: true, R03BB: true, B01AC: true, C10AX: true };
+
+  var ATC5_LABELS = {
+    C09AA: "IECA", C09CA: "ARA II", C07AB: "beta-bloqueante cardioselectivo", C07AG: "beta-bloqueante alfa+beta",
+    C08CA: "bloqueador de calcio dihidropiridínico", C08DB: "bloqueador de calcio no dihidropiridínico",
+    C03AA: "diurético tiazídico", C03CA: "diurético de asa", C03DA: "antagonista de la aldosterona",
+    A10BA: "biguanida", A10BB: "sulfonilurea", A10BH: "inhibidor de DPP-4", A10BJ: "agonista de GLP-1",
+    A10BK: "inhibidor de SGLT2", C10AA: "estatina", C10AB: "fibrato", C10AX: "otro hipolipemiante",
+    R03AC: "beta-2 agonista", R03BB: "anticolinérgico inhalado", R03BA: "corticoide inhalado",
+    R03DA: "metilxantina", A08AB: "inhibidor de lipasa", N06AB: "ISRS", N06AX: "IRSN",
+    C03DA4: "antagonista de la aldosterona", N05BA: "benzodiacepina", N03AE: "benzodiacepina",
+    B01AF: "anticoagulante directo (ACOD)", B01AE: "anticoagulante directo (ACOD)", B01AA: "antagonista de vitamina K",
+    B01AC: "antiagregante", A02BC: "inhibidor de bomba de protones", J01MA: "quinolona",
+    M01AE: "AINE", M01AB: "AINE", M01AC: "AINE", N02BE: "analgésico simple", N02AX: "opioide menor"
+  };
+
+  function getAtc5Set(medName) {
+    var out = [];
+    (medName || "").split(/[\/+]/).forEach(function (tok) {
+      var key = normalize(tok).replace(/\s+/g, "");
+      var atc = SUBSTANCE_ATC[key];
+      if (atc && out.indexOf(atc.substring(0, 5)) === -1) out.push(atc.substring(0, 5));
+    });
+    return out;
+  }
+
   var FREQUENCIES = [
     { v: "1x", label: "1 vez al día", pts: 0 },
     { v: "2x", label: "2 veces al día", pts: 5 },
@@ -657,7 +741,8 @@
         { t: "American Geriatrics Society 2023 Updated AGS Beers Criteria® for Potentially Inappropriate Medication Use in Older Adults", a: "J Am Geriatr Soc, 2023 — fundamenta la regla de benzodiacepina+opioide y corrobora ISRS+anticoagulante", u: "https://agsjournals.onlinelibrary.wiley.com/doi/10.1111/jgs.18372" },
         { t: "Manejo de los problemas de la salud física en adultos con trastornos mentales severos: Directrices de la OMS (Anexo 6 — interacciones medicamentosas)", a: "OMS/OPS, 2018/2020, vía NCBI Bookshelf — documento sobre trastornos mentales severos, se identifican 5 hallazgos de interacción fármaco-fármaco (ISRS+metformina, ISRS+antiagregante, diurético tiazídico+ISRS, benzodiacepina+verapamilo/diltiazem, ISRS+betabloqueante cardioselectivo) por propiedades farmacocinéticas del medicamento", u: "https://www.ncbi.nlm.nih.gov/books/NBK583436/pdf/Bookshelf_NBK583436.pdf" },
         { t: "Medscape Drug Interaction Checker", a: "WebMD/Medscape — herramienta de referencia general para el resto de reglas (consenso farmacológico amplio)", u: "https://reference.medscape.com/drug-interactionchecker" },
-        { t: "DrugBank Drug-Drug Interactions (dataset)", a: "Kaggle, dataset por mghobashy, datos sourced de DrugBank — banco de 191.542 pares de interacciones cargado el 2026-07-08; verificación regla por regla programada", u: "https://www.kaggle.com/datasets/mghobashy/drug-drug-interactions/data" }
+        { t: "DrugBank Drug-Drug Interactions (dataset)", a: "Kaggle, dataset por mghobashy, datos sourced de DrugBank — banco de 191.542 pares de interacciones cargado el 2026-07-08; verificación regla por regla programada", u: "https://www.kaggle.com/datasets/mghobashy/drug-drug-interactions/data" },
+        { t: "WHO ATC-DDD Index (snapshot 2021-12-03)", a: "Compilación de fabkury a partir del índice oficial de la OMS (WHO Collaborating Centre for Drug Statistics Methodology) — fuente del mapa principio activo → código ATC-7 usado por el motor de duplicidad terapéutica (ver nota metodológica). Se verificó manualmente cada código contra la monoterapia y vía de administración usada en esta app, corrigiendo coincidencias automáticas erróneas (combinaciones, vías nasal/parenteral) — no aporta reglas de interacción por sí mismo, solo la clasificación de sustancia a subgrupo químico ATC", u: "https://github.com/fabkury/atcd/blob/master/WHO%20ATC-DDD%202021-12-03.csv" }
       ]
     },
     {
@@ -906,6 +991,28 @@
           var m2InA = m2.classes.some(function (cl) { return cr.a.indexOf(cl) !== -1; });
           if ((m1InA && m2InB) || (m1InB && m2InA)) addInteraction(m1, m2, cr);
         }
+
+        // Duplicidad terapéutica: dos medicamentos DISTINTOS cuyo grupo ATC de 5 caracteres
+        // (subgrupo químico) coincide no suman beneficio clínico relevante y sí aumentan el riesgo
+        // de efectos adversos — es la primera pregunta al revisar un régimen de polifarmacia, y
+        // CLASS_PAIR_RULES no la cubre porque solo compara clases DISTINTAS entre sí (a contra b),
+        // nunca una clase contra sí misma. Se usa el grupo ATC (no la clase curada interna) porque es
+        // un estándar externo, verificable y de cobertura más amplia — ver SUBSTANCE_ATC y la nota
+        // metodológica en Referencias. Se excluyen los grupos de ATC5_DUPLICATION_EXEMPT, donde
+        // combinar dos agentes del mismo subgrupo es terapia estándar respaldada por guías.
+        var atc1 = getAtc5Set(m1.name), atc2 = getAtc5Set(m2.name);
+        atc1.forEach(function (g) {
+          if (ATC5_DUPLICATION_EXEMPT[g]) return;
+          if (atc2.indexOf(g) === -1) return;
+          var label = ATC5_LABELS[g] || g;
+          addInteraction(m1, m2, {
+            severity: "moderada",
+            mechanism: "Duplicidad terapéutica (ambos son " + label + ", ATC " + g + ")",
+            description: "Combinar dos medicamentos del mismo subgrupo ATC (" + label + ") generalmente no aporta beneficio aditivo relevante y sí incrementa el riesgo de efectos adversos.",
+            recommendation: "Revisar si ambos son necesarios; considerar suspender uno o, si se requiere mayor efecto, cambiar a un agente de otro grupo en vez de sumar dos del mismo.",
+            src: "Farmacología general — principio de duplicidad terapéutica, agrupado por subgrupo químico ATC (OMS ATC-DDD 2021-12-03); práctica estándar de revisión de medicación, no verificado contra un criterio numerado específico de STOPP/START"
+          });
+        });
       }
     }
 
@@ -1180,6 +1287,7 @@
       '<p class="section-sub"><b>Nota metodológica — efecto dual de las combinaciones:</b> un producto de combinación conlleva un riesgo de interacción <i>mayor</i> que la monoterapia, porque cada principio activo componente se evalúa por separado (ver nota anterior) y por tanto puede coincidir con más reglas de interacción que un solo fármaco. Sin embargo, ese mismo producto conlleva un riesgo de <i>no</i>-adherencia <i>menor</i> que tomar los mismos principios activos en tabletas separadas, porque reduce la carga de pastillas (pill burden): un metaanálisis de 44 estudios encontró adherencia significativamente mejor con combinación en tableta única frente a la misma combinación en tabletas libres en 18 de 23 estudios (Parati et al., Hypertension 2021; ver Referencias). El motor de riesgo de adherencia ya refleja esto sin necesidad de ajustar su fórmula, porque cuenta cada producto de combinación como un solo medicamento (una sola toma) en el factor "número de medicamentos" — el mismo dato que hace subir el riesgo de interacción es, para adherencia, un beneficio.</p>' +
       '<p class="section-sub"><b>Nota metodológica — ampliación de la tabla LASA con la guía OMS 2023:</b> se agregaron 9 pares nuevos a la tabla curada a partir de "Medication safety for look-alike, sound-alike medicines" (OMS, 2023), incluyendo dos casos clínicos de daño real documentados por la OMS (Propranolol/Prednisolona, Carbamazepina/Carbimazol), el par de nombres comerciales Lantus/Lanvis (insulina glargina vs. tioguanina, un antineoplásico) y el par Pregabalina/Vigabatrina (fragmento compartido "gaba" en el interior del nombre). Cada par nuevo se contrastó individualmente contra el catálogo CUM depurado; cuando uno de los dos principios no aparece en el subconjunto vigente/activo colombiano, la tarjeta del hallazgo lo indica explícitamente.</p>' +
       '<p class="section-sub"><b>Nota metodológica — regla derivada de detección por patrón posicional:</b> además de los pares citados literalmente por la OMS, su Tabla 2 describe un mecanismo más general de confusión: nombres que comparten letras al <i>inicio</i> (p. ej. "Am-", "Az-", "Carb-", "Pr-"), en el <i>interior</i> (p. ej. "-gaba-") o al <i>final</i> (p. ej. "-azol") del nombre — la OMS documenta esto como causa real de errores, no como curiosidad ortográfica. Se generalizó esta metodología a una regla automática (<code>lasaPatternMatch</code>) aplicada a cualquier par de medicamentos del paciente que no esté ya en la tabla curada ni sea detectado por el algoritmo de similitud global (umbral ≥0,72): se exige un prefijo compartido de al menos 2 letras (igual al mínimo de los propios ejemplos de la OMS, "Am"/"Az") <i>más</i> una similitud de Levenshtein de al menos 0,38, o un sufijo compartido de al menos 4 letras <i>más</i> una similitud de al menos 0,45. El umbral de sufijo es más exigente que el de prefijo porque, en español, las terminaciones de los nombres de medicamentos suelen ser morfemas de toda una clase farmacológica (p. ej. "-tina" en casi todas las estatinas y gliptinas) y no un indicio real de confusión — se detectó esto empíricamente al calibrar la regla: "Rosuvastatina"/"Sitagliptina" comparten "-tina" pero su similitud global es solo 0,38, mientras que "Metronidazol"/"Omeprazol" (el propio ejemplo de sufijo de la OMS, "-azol") tiene una similitud de 0,50; el umbral de 0,45 separa ambos casos. También se exige una longitud mínima de 6 caracteres y una diferencia de longitud máxima de 3, para evitar coincidencias triviales entre nombres cortos. Con estos parámetros, la regla generaliza el hallazgo de la OMS a casos no citados textualmente pero estructuralmente análogos — por ejemplo, Amlodipino y Amilorida comparten el inicio "AM-" y tienen una similitud de 0,40, cayendo dentro del patrón que la OMS documenta para el prefijo "Am-" (Amiloride, Amitriptyline, Amlodipine, Amiodarone) aunque ese par específico no aparezca en su tabla. Estos hallazgos se etiquetan con severidad "Bajo/Medio" (más conservadora que un par curado específico) y se marcan explícitamente como "no citado por la OMS; generado por regla derivada", para que quede claro que es un patrón estructural y no una confusión documentada caso por caso — siempre verificar manualmente.</p>' +
+      '<p class="section-sub"><b>Nota metodológica — duplicidad terapéutica por grupo ATC (reporte de usuario, 2026-07-08):</b> se reportó que dos inhibidores de SGLT2 (Empagliflozina + Dapagliflozina) no generaban ningún hallazgo de interacción. Diagnóstico: el motor original de interacciones solo compara clases <i>distintas</i> entre sí (<code>CLASS_PAIR_RULES</code>), nunca detecta cuando dos medicamentos son de la <i>misma</i> clase — un escenario de sobreprescripción distinto de una interacción farmacocinética/farmacodinámica clásica, pero igual de relevante clínicamente (mayor riesgo acumulado de efectos adversos, sin beneficio aditivo). Se agregó un motor de duplicidad terapéutica que evalúa si dos medicamentos comparten el mismo <b>subgrupo químico ATC</b> (los primeros 5 caracteres del código, p. ej. "A10BK" para inhibidores de SGLT2), en vez de las ~36 clases curadas internas de la app, porque el ATC es un estándar internacional verificable y de cobertura más amplia. El código ATC no se tomó directamente del campo <code>atc</code> del catálogo CUM: ese campo refleja el <i>producto registrado</i> ante INVIMA, que puede ser una combinación de dosis fija (p. ej. una fila de "Empagliflozina" en el CUM trae el ATC "A10BD19", que en realidad es el código del producto combinado Empagliflozina/Linagliptina) — usarlo tal cual habría asignado a un principio activo individual el código de un producto distinto, precisamente el problema que esta app busca evitar al descomponer combinaciones en sus componentes (ver nota metodológica sobre combinaciones). En su lugar, se construyó un mapa de ~80 principios activos (los que ya alimentan el motor de clasificación) contra el índice oficial <b>OMS ATC-DDD, snapshot 2021-12-03</b> (github.com/fabkury/atcd), verificando manualmente que cada código correspondiera a la monoterapia y a la vía de administración que usa esta app — varias coincidencias automáticas iniciales resultaron ser incorrectas y se corrigieron a mano: Tiotropio (se tomó el código inhalado, no el de la combinación con olodaterol), Ibuprofeno (código oral, no el parenteral de uso neonatal), Ácido acetilsalicílico (código de uso antiagregante, no el de uso odontológico), y Budesonida/Beclometasona/Fluticasona/Ipratropio (código de vía respiratoria/inhalada, no el de vía nasal, que aparecía primero en el índice). Se excluyen de la regla los subgrupos ATC donde combinar dos agentes es terapia estándar respaldada por guías: R03AC (beta-2 agonistas de acción corta y prolongada), R03BB (anticolinérgicos inhalados de acción corta y prolongada), B01AC (doble antiagregación tras síndrome coronario agudo) y C10AX (donde la OMS agrupa, al mismo nivel de 5 caracteres, tanto a los inhibidores de PCSK9 como a la Ezetimiba — mecanismos distintos que se combinan a propósito en hipercolesterolemia refractaria). <b>Limitaciones declaradas:</b> Tirzepatida no está en el snapshot 2021-12-03 de la OMS (fármaco más nuevo) y queda sin mapear; excluir C10AX por completo también deja sin detectar la duplicidad genuina de combinar dos inhibidores de PCSK9 distintos entre sí, un caso raro que se sacrificó para no generar falsos positivos en el caso mucho más frecuente de PCSK9i+Ezetimiba; la OMS clasifica la Codeína bajo antitusivos (R05DA) incluso para su uso analgésico, por lo que no comparte grupo ATC con Tramadol pese a que la clasificación clínica interna de esta app los agrupa a ambos como "Opioide menor" — una divergencia real entre la taxonomía regulatoria de la OMS y el uso clínico pragmático, que se deja tal cual y se documenta aquí en vez de forzar una corrección no verificable. El mapeo cubre actualmente los principios activos curados que ya alimenta el motor de clasificación (sección "Qué evalúa el algoritmo"), no las 11.299 filas completas del catálogo CUM.</p>' +
       renderReferences() +
       "</section>";
   }
