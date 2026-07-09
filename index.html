@@ -454,7 +454,7 @@
   };
 
   // Mapa principio activo (normalizado) -> código ATC-7 canónico de monoterapia, verificado a mano
-  // contra el índice oficial WHO ATC-DDD, snapshot 2021-12-03 (github.com/fabkury/atcd). Reemplaza
+  // contra el índice oficial WHO ATC-DDD, snapshot 2026-04-25 (github.com/fabkury/atcd). Reemplaza
   // el uso directo del campo "atc" del catálogo CUM para este propósito: ese campo refleja el
   // PRODUCTO registrado ante INVIMA (que puede ser una combinación de dosis fija, p. ej. Empagliflozina
   // aparece con atc="A10BD19" en el registro de "Empagliflozina/Linagliptina"), no el principio activo
@@ -467,8 +467,12 @@
   // R03AL06 que es la combinación con olodaterol), Ibuprofeno (M01AE01 oral, no C01EB16 parenteral
   // neonatal), Ácido acetilsalicílico (B01AC06 uso antiagregante, no A01AD05 uso odontológico),
   // Budesonida/Beclometasona/Fluticasona/Ipratropio (código Rxx inhalado/respiratorio, no el código
-  // "N" de uso nasal que aparecía primero en el índice). Tirzepatida no está en el snapshot 2021-12-03
-  // (fármaco más nuevo) y queda sin mapear.
+  // "N" de uso nasal que aparecía primero en el índice). Tirzepatida (A10BX16) sí está incluida en
+  // este snapshot más reciente — no lo estaba en el snapshot 2021-12-03 usado originalmente. La OMS la
+  // clasifica aparte de los agonistas GLP-1 (A10BJ), como agonista dual GIP/GLP-1, por lo que no
+  // comparte subgrupo ATC de 5 caracteres con Semaglutida/Dulaglutida pese a que la clase curada interna
+  // de esta app agrupa a los tres como "AgonistaGLP1" — la misma divergencia de tipo que ya existía
+  // entre Codeína y Tramadol (ver classifyMedName).
   var SUBSTANCE_ATC = {
     enalapril: "C09AA02", lisinopril: "C09AA03", ramipril: "C09AA05",
     losartan: "C09CA01", valsartan: "C09CA03", irbesartan: "C09CA04",
@@ -479,6 +483,7 @@
     metformina: "A10BA02", glibenclamida: "A10BB01", glipizida: "A10BB07", gliclazida: "A10BB09",
     sitagliptina: "A10BH01", vildagliptina: "A10BH02",
     semaglutida: "A10BJ06", dulaglutida: "A10BJ05",
+    tirzepatida: "A10BX16", // agonista dual GIP/GLP-1; la OMS lo clasifica aparte de los agonistas GLP-1 (A10BJ), no en el mismo subgrupo de 5 caracteres — ver nota metodológica
     empagliflozina: "A10BK03", canagliflozina: "A10BK02", dapagliflozina: "A10BK01",
     atorvastatina: "C10AA05", simvastatina: "C10AA01", rosuvastatina: "C10AA07", pravastatina: "C10AA03",
     fenofibrato: "C10AB05", bezafibrato: "C10AB02",
@@ -769,7 +774,7 @@
     { text: "World Health Organization. Medication safety for look-alike, sound-alike medicines. Ginebra: OMS; 2023. ISBN 978-92-4-005889-7.", u: "https://iris.who.int/server/api/core/bitstreams/5a2f5a2c-e95c-45b8-ad44-f15c9351f9f1/content" },
     { text: "Ndumele CE, Rangaswami J, Chow SL, et al. 2026 AHA/ACC/ADA/ASN Guideline for the Prevention, Detection, Evaluation, and Management of Cardiovascular-Kidney-Metabolic Syndrome. Circulation. 2026;153.", u: "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001453" },
     { text: "Instituto Nacional de Vigilancia de Medicamentos y Alimentos (INVIMA). Código Único de Medicamentos (CUM) — Registros vigentes [Internet]. Bogotá: datos.gov.co.", u: "https://www.datos.gov.co/Salud-y-Protecci-n-Social/C-DIGO-NICO-DE-MEDICAMENTOS-VIGENTES/i7cb-raxc/about_data" },
-    { text: "fabkury. WHO ATC-DDD Index, snapshot 2021-12-03 [Internet]. GitHub.", u: "https://github.com/fabkury/atcd/blob/master/WHO%20ATC-DDD%202021-12-03.csv" }
+    { text: "fabkury. WHO ATC-DDD Index, snapshot 2026-04-25 [Internet]. GitHub.", u: "https://github.com/fabkury/atcd/blob/master/WHO%20ATC-DDD%202026-04-25.csv" }
   ];
 
   /* ---------------------------------------------------------------------
@@ -1003,7 +1008,7 @@
             mechanism: "Duplicidad terapéutica (ambos son " + label + ", ATC " + g + ")",
             description: "Combinar dos medicamentos del mismo subgrupo ATC (" + label + ") generalmente no aporta beneficio aditivo relevante y sí incrementa el riesgo de efectos adversos.",
             recommendation: "Revisar si ambos son necesarios; considerar suspender uno o, si se requiere mayor efecto, cambiar a un agente de otro grupo en vez de sumar dos del mismo.",
-            src: "Farmacología general — principio de duplicidad terapéutica, agrupado por subgrupo químico ATC (OMS ATC-DDD 2021-12-03); práctica estándar de revisión de medicación, no verificado contra un criterio numerado específico de STOPP/START"
+            src: "Farmacología general — principio de duplicidad terapéutica, agrupado por subgrupo químico ATC (OMS ATC-DDD 2026-04-25); práctica estándar de revisión de medicación, no verificado contra un criterio numerado específico de STOPP/START"
           });
         });
       }
@@ -1318,7 +1323,7 @@
       "<h4>Motor de interacciones</h4>" +
       "<p>Se generan todos los pares posibles de medicamentos del paciente (combinatoria N×(N−1)/2) y se comparan contra una matriz de reglas por clase farmacológica y por nombre exacto, fundamentada según se describe en la Introducción" + cite([1, 2, 3, 4, 5]) + ". Una regla especial de tres fármacos (\"triple whammy\": IECA/ARA-II + diurético + AINE) se evalúa aparte; está ampliamente documentada en farmacovigilancia, pero no corresponde a un criterio STOPP/START único.</p>" +
       "<h4>Duplicidad terapéutica por grupo ATC</h4>" +
-      "<p>Además de las interacciones entre clases distintas, el motor detecta cuando dos medicamentos pertenecen al mismo subgrupo químico ATC (los primeros 5 caracteres del código, p. ej. \"A10BK\" para inhibidores de SGLT2) — un escenario de sobreprescripción sin beneficio aditivo demostrado que una matriz de reglas por clases distintas no puede capturar por diseño. El código ATC no se toma directamente del catálogo CUM, porque ese campo refleja el producto registrado ante INVIMA — que puede ser una combinación de dosis fija — y no el principio activo individual; asignarlo tal cual reintroduciría el problema que la descomposición de combinaciones busca evitar. En su lugar se construyó un mapa de ~80 principios activos verificado manualmente contra el índice oficial OMS ATC-DDD" + cite(16) + ", corrigiendo los casos en que la primera coincidencia automática correspondía a una combinación o a una vía de administración distinta de la usada en esta app (p. ej. formulaciones nasales o parenterales en vez de las orales/inhaladas empleadas aquí). Se excluyen de la regla los subgrupos donde combinar dos agentes es terapia estándar: beta-2 agonistas de acción corta y prolongada, anticolinérgicos inhalados de acción corta y prolongada, doble antiagregación tras síndrome coronario agudo, e inhibidores de PCSK9 con ezetimiba — estos dos últimos agrupados por la OMS en el mismo subgrupo de 5 caracteres pese a tener mecanismos complementarios que se combinan a propósito en hipercolesterolemia refractaria. El mapeo cubre actualmente los principios activos curados que alimentan el motor de clasificación, no la totalidad del catálogo CUM.</p>" +
+      "<p>Además de las interacciones entre clases distintas, el motor detecta cuando dos medicamentos pertenecen al mismo subgrupo químico ATC (los primeros 5 caracteres del código, p. ej. \"A10BK\" para inhibidores de SGLT2) — un escenario de sobreprescripción sin beneficio aditivo demostrado que una matriz de reglas por clases distintas no puede capturar por diseño. El código ATC no se toma directamente del catálogo CUM, porque ese campo refleja el producto registrado ante INVIMA — que puede ser una combinación de dosis fija — y no el principio activo individual; asignarlo tal cual reintroduciría el problema que la descomposición de combinaciones busca evitar. En su lugar se construyó un mapa de ~80 principios activos verificado manualmente contra el índice oficial OMS ATC-DDD" + cite(16) + ", corrigiendo los casos en que la primera coincidencia automática correspondía a una combinación o a una vía de administración distinta de la usada en esta app (p. ej. formulaciones nasales o parenterales en vez de las orales/inhaladas empleadas aquí). Se excluyen de la regla los subgrupos donde combinar dos agentes es terapia estándar: beta-2 agonistas de acción corta y prolongada, anticolinérgicos inhalados de acción corta y prolongada, doble antiagregación tras síndrome coronario agudo, e inhibidores de PCSK9 con ezetimiba — estos dos últimos agrupados por la OMS en el mismo subgrupo de 5 caracteres pese a tener mecanismos complementarios que se combinan a propósito en hipercolesterolemia refractaria. Un efecto colateral de usar el ATC en vez de la clase curada interna: la OMS clasifica a la Tirzepatida (agonista dual GIP/GLP-1) en un subgrupo distinto al de los agonistas GLP-1 puros (Semaglutida, Dulaglutida), por lo que la duplicidad entre ellos no se detecta pese a que la clase curada interna los agrupa juntos — la misma divergencia de tipo que ya existía entre Codeína y Tramadol. El mapeo cubre actualmente los principios activos curados que alimentan el motor de clasificación, no la totalidad del catálogo CUM.</p>" +
       "<h4>Detección de medicamentos LASA</h4>" +
       "<p>Se combinan tres capas de detección, en orden de prioridad: (1) una tabla curada de pares verificados contra el ISMP" + cite([10, 11]) + ", un hallazgo de campo colombiano" + cite(12) + " y la guía OMS 2023" + cite(13) + "; (2) un algoritmo de similitud de cadenas (distancia de Levenshtein, umbral ≥0,72) para pares no catalogados; y (3) una regla derivada que generaliza el mecanismo de letras compartidas al inicio o al final del nombre que documenta la OMS" + cite(13) + ", calibrada empíricamente (prefijo ≥2 letras y similitud ≥0,38, o sufijo ≥4 letras y similitud ≥0,45) para extender la detección a casos estructuralmente análogos no citados textualmente por la fuente, sin generar falsos positivos por sufijos morfológicos genéricos del español (p. ej. \"-tina\", común a estatinas y gliptinas).</p>" +
       "<h4>Catálogo de medicamentos (CUM)</h4>" +
